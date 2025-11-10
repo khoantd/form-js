@@ -1,0 +1,318 @@
+$font-prefix: '../node_modules/@ibm/plex';
+@import '../node_modules/@ibm/plex/scss/ibm-plex.scss';
+
+// Global styles
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  font-family: 'IBM Plex Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+// Landing Page Styles
+.demo-landing-page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem;
+}
+
+.demo-landing-content {
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+  padding: 3rem 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.demo-landing-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1a1a1a;
+}
+
+.demo-landing-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 2rem 0;
+  line-height: 1.5;
+}
+
+.demo-landing-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.demo-landing-info {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.demo-landing-info p {
+  font-size: 0.875rem;
+  color: #888;
+  margin: 0;
+  line-height: 1.5;
+}
+
+// Button Styles
+.demo-button {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.demo-button-primary {
+  background-color: #0066cc;
+  color: white;
+  border-color: #0066cc;
+}
+
+.demo-button-primary:hover {
+  background-color: #0052a3;
+  border-color: #0052a3;
+}
+
+.demo-button-primary:active {
+  background-color: #003d7a;
+  border-color: #003d7a;
+}
+
+.demo-button-secondary {
+  background-color: white;
+  color: #0066cc;
+  border-color: #0066cc;
+}
+
+.demo-button-secondary:hover {
+  background-color: #f0f7ff;
+}
+
+.demo-button-secondary:active {
+  background-color: #e0efff;
+}
+
+.demo-button-large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+// File Upload Styles
+.demo-file-upload {
+  position: relative;
+}
+
+.demo-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.demo-error-message {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 0.875rem;
+}
+
+.demo-drop-zone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.demo-drop-zone-active {
+  pointer-events: all;
+}
+
+.demo-drop-zone-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px dashed #0066cc;
+  border-radius: 8px;
+  margin: 2rem;
+}
+
+.demo-drop-zone-message {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0066cc;
+  text-align: center;
+}
+
+// Playground Page Styles
+.demo-playground-page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.demo-playground-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.demo-playground-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.demo-playground-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.demo-loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  color: #666;
+}
+
+// Error Banner Styles
+.demo-error-banner {
+  background-color: #fff3cd;
+  border-bottom: 1px solid #ffc107;
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
+}
+
+.demo-error-banner-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.demo-error-banner-icon {
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  line-height: 1.5;
+}
+
+.demo-error-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.demo-error-banner-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #856404;
+  margin-bottom: 0.25rem;
+}
+
+.demo-error-banner-message {
+  font-size: 0.875rem;
+  color: #856404;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.demo-error-banner-dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #856404;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.demo-error-banner-dismiss:hover {
+  background-color: rgba(133, 100, 4, 0.1);
+}
+
+.demo-error-banner-dismiss:focus {
+  outline: 2px solid #856404;
+  outline-offset: 2px;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .demo-landing-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .demo-landing-title {
+    font-size: 1.5rem;
+  }
+
+  .demo-playground-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .demo-playground-actions {
+    width: 100%;
+  }
+}
+
