@@ -48,7 +48,7 @@ export default defineConfig(() => {
     css: {
       preprocessorOptions: {
         scss: {
-          silenceDeprecations: ['import'],
+          quietDeps: true, // Suppress deprecation warnings from dependencies (like @ibm/plex)
         },
       },
     },
