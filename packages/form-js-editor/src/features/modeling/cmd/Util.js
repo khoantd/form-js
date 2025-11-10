@@ -13,7 +13,18 @@ export function arrayRemove(array, index) {
 }
 
 export function updatePath(formFieldRegistry, formField, index) {
-  const parent = formFieldRegistry.get(formField._parent);
+  // Try to get parent from object graph first
+  let parent = formFieldRegistry.getParent(formField);
+  
+  // Fallback to _parent string ID if not in object graph yet (e.g., during add operation)
+  if (!parent && formField._parent) {
+    parent = formFieldRegistry.get(formField._parent);
+  }
+  
+  if (!parent) {
+    throw new Error('formField must have a parent to update path');
+  }
+  
   refreshPathsRecursively(formField, [...parent._path, 'components', index]);
   return formField;
 }

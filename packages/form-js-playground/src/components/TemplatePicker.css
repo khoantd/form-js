@@ -1,0 +1,172 @@
+.fjs-pgl-template-picker {
+  min-height: 400px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.fjs-pgl-template-picker-filters {
+  margin-bottom: 1.5em;
+  padding-bottom: 1em;
+  border-bottom: 1px solid var(--color-grey-225-10-75, #e0e0e0);
+}
+
+.fjs-pgl-template-picker-search {
+  margin-bottom: 1em;
+}
+
+.fjs-pgl-template-picker-search-input {
+  width: 100%;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--color-grey-225-10-75, #e0e0e0);
+  border-radius: 3px;
+  font-family: var(--font-family, 'IBM Plex Sans', sans-serif);
+  font-size: 0.9em;
+}
+
+.fjs-pgl-template-picker-search-input:focus {
+  outline: 2px solid var(--color-blue-205-100-50, #0062ff);
+  outline-offset: 2px;
+  border-color: var(--color-blue-205-100-50, #0062ff);
+}
+
+.fjs-pgl-template-picker-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+.fjs-pgl-template-picker-category {
+  padding: 0.4em 0.8em;
+  border: 1px solid var(--color-grey-225-10-75, #e0e0e0);
+  border-radius: 3px;
+  background: var(--color-white, #ffffff);
+  color: var(--color-text, #333333);
+  font-family: var(--font-family, 'IBM Plex Sans', sans-serif);
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fjs-pgl-template-picker-category:hover {
+  background: var(--color-grey-225-10-95, #f5f5f5);
+  border-color: var(--color-grey-225-10-55, #999999);
+}
+
+.fjs-pgl-template-picker-category.active {
+  background: var(--color-blue-205-100-50, #0062ff);
+  color: var(--color-white, #ffffff);
+  border-color: var(--color-blue-205-100-50, #0062ff);
+}
+
+.fjs-pgl-template-picker-empty {
+  text-align: center;
+  padding: 3em 1em;
+  color: var(--color-grey-225-10-55, #999999);
+}
+
+.fjs-pgl-template-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5em;
+  overflow-y: auto;
+  flex: 1;
+  padding: 0.5em;
+  margin: -0.5em;
+}
+
+.fjs-pgl-template-card {
+  border: 1px solid var(--color-grey-225-10-75, #e0e0e0);
+  border-radius: 4px;
+  padding: 1.25em;
+  background: var(--color-white, #ffffff);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.fjs-pgl-template-card:hover {
+  border-color: var(--color-blue-205-100-50, #0062ff);
+  box-shadow: 0 2px 8px rgba(0, 98, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.fjs-pgl-template-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75em;
+  gap: 0.5em;
+}
+
+.fjs-pgl-template-card-title {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--color-text, #333333);
+  flex: 1;
+}
+
+.fjs-pgl-template-card-category {
+  font-size: 0.75em;
+  padding: 0.2em 0.5em;
+  background: var(--color-grey-225-10-95, #f5f5f5);
+  border-radius: 3px;
+  color: var(--color-grey-225-10-35, #666666);
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.fjs-pgl-template-card-description {
+  margin: 0 0 1em 0;
+  font-size: 0.9em;
+  color: var(--color-grey-225-10-35, #666666);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.fjs-pgl-template-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  margin-bottom: 1em;
+}
+
+.fjs-pgl-template-card-tag {
+  font-size: 0.75em;
+  padding: 0.2em 0.5em;
+  background: var(--color-grey-225-10-97, #f8f8f8);
+  border-radius: 3px;
+  color: var(--color-grey-225-10-35, #666666);
+}
+
+.fjs-pgl-template-card-footer {
+  margin-top: auto;
+  padding-top: 1em;
+  border-top: 1px solid var(--color-grey-225-10-90, #e8e8e8);
+}
+
+.fjs-pgl-template-card-button {
+  width: 100%;
+  padding: 0.6em 1em;
+  background: var(--color-blue-205-100-50, #0062ff);
+  color: var(--color-white, #ffffff);
+  border: none;
+  border-radius: 3px;
+  font-family: var(--font-family, 'IBM Plex Sans', sans-serif);
+  font-size: 0.9em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.fjs-pgl-template-card-button:hover {
+  background: var(--color-blue-205-100-60, #0052cc);
+}
+
+.fjs-pgl-template-card-button:active {
+  background: var(--color-blue-205-100-40, #003d99);
+}
+

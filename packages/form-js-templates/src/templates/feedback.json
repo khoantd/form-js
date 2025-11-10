@@ -1,0 +1,100 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "text": "# Feedback Form\n\nWe value your opinion! Please share your thoughts with us."
+    },
+    {
+      "key": "name",
+      "label": "Your Name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "email",
+      "label": "Email Address",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "validationType": "email"
+      }
+    },
+    {
+      "key": "feedbackType",
+      "label": "Type of Feedback",
+      "type": "select",
+      "values": [
+        {
+          "label": "Bug Report",
+          "value": "bug"
+        },
+        {
+          "label": "Feature Request",
+          "value": "feature"
+        },
+        {
+          "label": "General Feedback",
+          "value": "general"
+        },
+        {
+          "label": "Complaint",
+          "value": "complaint"
+        },
+        {
+          "label": "Compliment",
+          "value": "compliment"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "rating",
+      "label": "Rating",
+      "type": "radio",
+      "values": [
+        {
+          "label": "Excellent",
+          "value": "excellent"
+        },
+        {
+          "label": "Good",
+          "value": "good"
+        },
+        {
+          "label": "Average",
+          "value": "average"
+        },
+        {
+          "label": "Poor",
+          "value": "poor"
+        }
+      ]
+    },
+    {
+      "key": "message",
+      "label": "Your Feedback",
+      "type": "textarea",
+      "validate": {
+        "required": true,
+        "minLength": 20
+      },
+      "description": "Please provide detailed feedback (minimum 20 characters)"
+    },
+    {
+      "key": "followUp",
+      "label": "I would like to receive a follow-up",
+      "type": "checkbox"
+    },
+    {
+      "key": "submit",
+      "label": "Submit Feedback",
+      "type": "button"
+    }
+  ]
+}
+

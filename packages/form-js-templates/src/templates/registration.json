@@ -1,0 +1,105 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "text": "# Create Your Account\n\nJoin us today and get started!"
+    },
+    {
+      "key": "firstName",
+      "label": "First Name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "lastName",
+      "label": "Last Name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "email",
+      "label": "Email Address",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "validationType": "email"
+      }
+    },
+    {
+      "key": "password",
+      "label": "Password",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "minLength": 8
+      },
+      "description": "Password must be at least 8 characters long"
+    },
+    {
+      "key": "confirmPassword",
+      "label": "Confirm Password",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "dateOfBirth",
+      "label": "Date of Birth",
+      "type": "datetime",
+      "subtype": "date",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "country",
+      "label": "Country",
+      "type": "select",
+      "values": [
+        {
+          "label": "United States",
+          "value": "us"
+        },
+        {
+          "label": "United Kingdom",
+          "value": "uk"
+        },
+        {
+          "label": "Canada",
+          "value": "ca"
+        },
+        {
+          "label": "Germany",
+          "value": "de"
+        },
+        {
+          "label": "France",
+          "value": "fr"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "terms",
+      "label": "I agree to the Terms and Conditions",
+      "type": "checkbox",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "submit",
+      "label": "Create Account",
+      "type": "button"
+    }
+  ]
+}
+

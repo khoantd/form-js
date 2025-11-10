@@ -13,6 +13,8 @@ import { PaletteModule } from './features/palette';
 import { PropertiesPanelModule } from './features/properties-panel';
 import { RenderInjectionModule } from './features/render-injection';
 import { RepeatRenderModule } from './features/repeat-render';
+import { PluginModule, PluginRegistry } from './features/plugins';
+import { PreviewModeModule } from './features/preview-mode';
 
 import { MarkdownRendererModule } from '@bpmn-io/form-js-viewer';
 
@@ -65,7 +67,7 @@ export class FormEditor {
 
     this._container.setAttribute('tabindex', '0');
 
-    const { container, exporter, injector = this._createInjector(options, this._container), properties = {} } = options;
+    const { container, exporter, injector = this._createInjector(options, this._container), properties = {}, theme } = options;
 
     /**
      * @private
@@ -87,6 +89,19 @@ export class FormEditor {
     this.invoke = injector.invoke;
 
     this.get('eventBus').fire('form.init');
+
+    // Apply initial theme if provided
+    if (theme) {
+      try {
+        const themeManager = this.get('themeManager', false);
+        if (themeManager) {
+          themeManager.applyTheme(theme, false);
+        }
+      } catch (error) {
+        // Theme manager might not be available, ignore
+        console.warn('Failed to apply initial theme:', error);
+      }
+    }
 
     if (container) {
       this.attachTo(container);
@@ -221,6 +236,113 @@ export class FormEditor {
   }
 
   /**
+   * Apply a theme to the form editor.
+   *
+   * @param {import('@bpmn-io/form-js-viewer/dist/types/types').Theme|string} theme - Theme object or preset name
+   * @param {boolean} [merge=true] - Whether to merge with current theme
+   */
+  applyTheme(theme, merge = true) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    themeManager.applyTheme(theme, merge);
+  }
+
+  /**
+   * Get the current theme.
+   *
+   * @returns {import('@bpmn-io/form-js-viewer/dist/types/types').Theme}
+   */
+  getTheme() {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    return themeManager.getTheme();
+  }
+
+  /**
+   * Reset theme to default.
+   */
+  resetTheme() {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    themeManager.resetTheme();
+  }
+
+  /**
+   * Register a theme preset.
+   *
+   * @param {string} name - Preset name
+   * @param {import('@bpmn-io/form-js-viewer/dist/types/types').Theme} theme - Theme object
+   */
+  registerThemePreset(name, theme) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    themeManager.registerPreset(name, theme);
+  }
+
+  /**
+   * Get a theme preset.
+   *
+   * @param {string} name - Preset name
+   * @returns {import('@bpmn-io/form-js-viewer/dist/types/types').Theme|null}
+   */
+  getThemePreset(name) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    return themeManager.getPreset(name);
+  }
+
+  /**
+   * Get all registered theme presets.
+   *
+   * @returns {Array<{name: string, theme: import('@bpmn-io/form-js-viewer/dist/types/types').Theme}>}
+   */
+  getThemePresets() {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    return themeManager.getPresets();
+  }
+
+  /**
+   * Set a theme property.
+   *
+   * @param {string} property - CSS variable name
+   * @param {string} value - CSS value
+   */
+  setThemeProperty(property, value) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    themeManager.setProperty(property, value);
+  }
+
+  /**
+   * Get a theme property.
+   *
+   * @param {string} property - CSS variable name
+   * @returns {string|null}
+   */
+  getThemeProperty(property) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    return themeManager.getProperty(property);
+  }
+
+  /**
    * @internal
    *
    * @param {FormEditorOptions} options
@@ -229,7 +351,7 @@ export class FormEditor {
    * @returns {Injector}
    */
   _createInjector(options, container) {
-    const { modules = this._getModules(), additionalModules = [], renderer = {}, ...config } = options;
+    const { modules = this._getModules(), additionalModules = [], plugins = [], renderer = {}, ...config } = options;
 
     const enrichedConfig = {
       ...config,
@@ -239,13 +361,76 @@ export class FormEditor {
       },
     };
 
-    return createInjector([
+    // Create a temporary plugin registry to collect plugin modules before injector creation
+    let pluginModules = [];
+    if (plugins && plugins.length > 0) {
+      const tempRegistry = new PluginRegistry();
+      const tempContext = {
+        formEditor: this,
+        injector: null, // Will be set after injector creation
+        eventBus: null, // Will be set after injector creation
+      };
+
+      // Register plugins temporarily to collect modules
+      plugins.forEach((plugin) => {
+        try {
+          const pluginInstance = tempRegistry.register(plugin, tempContext);
+          const modules = pluginInstance.getModules();
+          if (Array.isArray(modules)) {
+            pluginModules.push(...modules);
+          }
+        } catch (error) {
+          console.error(`Failed to register plugin: ${error.message}`, error);
+        }
+      });
+    }
+
+    const injector = createInjector([
       { config: ['value', enrichedConfig] },
       { formEditor: ['value', this] },
       CoreModule,
       ...modules,
       ...additionalModules,
+      ...pluginModules, // Add plugin modules at injector creation time
     ]);
+
+    // Register plugins after injector is created (for non-module contributions)
+    if (plugins && plugins.length > 0) {
+      this._registerPlugins(plugins, injector);
+    }
+
+    return injector;
+  }
+
+  /**
+   * Register plugins with the editor.
+   *
+   * @internal
+   * @param {Array<Plugin|Object>} plugins - Array of plugin instances or definitions
+   * @param {Injector} injector - Dependency injector
+   */
+  _registerPlugins(plugins, injector) {
+    const pluginRegistry = injector.get('pluginRegistry', false);
+    const eventBus = injector.get('eventBus', false);
+
+    if (!pluginRegistry || !eventBus) {
+      console.warn('Plugin system not available. Make sure PluginModule is included in modules.');
+      return;
+    }
+
+    const context = {
+      formEditor: this,
+      injector,
+      eventBus,
+    };
+
+    plugins.forEach((plugin) => {
+      try {
+        pluginRegistry.register(plugin, context);
+      } catch (error) {
+        console.error(`Failed to register plugin: ${error.message}`, error);
+      }
+    });
   }
 
   /**
@@ -290,6 +475,8 @@ export class FormEditor {
       PropertiesPanelModule,
       RenderInjectionModule,
       RepeatRenderModule,
+      PluginModule,
+      PreviewModeModule,
     ];
   }
 

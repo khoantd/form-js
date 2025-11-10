@@ -224,3 +224,86 @@
   width: 100%;
   height: 100%;
 }
+
+/**
+ * Error Notification
+ */
+.fjs-pgl-error-notification {
+  position: relative;
+  margin: 0.5em;
+  padding: 0.75em 1em;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fjs-pgl-error-notification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75em;
+}
+
+.fjs-pgl-error-notification-icon {
+  flex-shrink: 0;
+  font-size: 1.2em;
+  line-height: 1.5;
+}
+
+.fjs-pgl-error-notification-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.fjs-pgl-error-notification-title {
+  font-weight: 600;
+  font-size: 0.9em;
+  color: #856404;
+  margin-bottom: 0.25em;
+}
+
+.fjs-pgl-error-notification-message {
+  font-size: 0.85em;
+  color: #856404;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.fjs-pgl-error-notification-dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  line-height: 1;
+  color: #856404;
+  cursor: pointer;
+  padding: 0;
+  width: 1.5em;
+  height: 1.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.fjs-pgl-error-notification-dismiss:hover {
+  background-color: rgba(133, 100, 4, 0.1);
+}
+
+.fjs-pgl-error-notification-dismiss:focus {
+  outline: 2px solid #856404;
+  outline-offset: 2px;
+}

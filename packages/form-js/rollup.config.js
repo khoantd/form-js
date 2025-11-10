@@ -3,6 +3,7 @@ import copy from 'rollup-plugin-copy';
 import pkg from './package.json';
 
 import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
 
 export default [
@@ -24,6 +25,7 @@ export default [
       '@bpmn-io/form-js-viewer',
       '@bpmn-io/form-js-editor',
       '@bpmn-io/form-js-playground',
+      '@bpmn-io/form-js-templates',
       '@bpmn-io/form-js-carbon-styles',
     ],
     plugins: [
@@ -49,9 +51,10 @@ export default [
         format: 'umd',
         file: pkg.exports['./editor'].umd,
         name: 'FormEditor',
+        inlineDynamicImports: true,
       },
     ],
-    plugins: [resolve(), commonjs()],
+    plugins: [json(), resolve(), commonjs()],
     onwarn,
   },
   {
@@ -61,9 +64,10 @@ export default [
         format: 'umd',
         file: pkg.exports['./viewer'].umd,
         name: 'FormViewer',
+        inlineDynamicImports: true,
       },
     ],
-    plugins: [resolve(), commonjs()],
+    plugins: [json(), resolve(), commonjs()],
     onwarn,
   },
   {
@@ -73,21 +77,15 @@ export default [
         format: 'umd',
         file: pkg.exports['./playground'].umd,
         name: 'FormPlayground',
+        inlineDynamicImports: true,
       },
     ],
-    plugins: [resolve(), commonjs()],
+    plugins: [json(), resolve(), commonjs()],
     onwarn,
   },
 ];
 
 function onwarn(warning, warn) {
-  // TODO(@barmac): remove once https://github.com/moment/luxon/issues/193 is resolved
-  if (warning.code === 'CIRCULAR_DEPENDENCY') {
-    if (warning.message.includes('luxon')) {
-      return;
-    }
-  }
-
   if (warning.code === 'THIS_IS_UNDEFINED') {
     if (warning.id.includes('flatpickr')) {
       return;

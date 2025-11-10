@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@bpmn-io/form-js-editor": "^1.18.0",
+    "@bpmn-io/form-js-templates": "^1.18.0",
     "@bpmn-io/form-js-viewer": "^1.18.0",
     "@codemirror/autocomplete": "^6.19.1",
     "@codemirror/commands": "^6.10.0",

@@ -33,8 +33,7 @@ export class RemoveFormFieldHandler {
     // (3) Remove form field and children from form field registry
     runRecursively(formField, (formField) => this._formFieldRegistry.remove(formField));
 
-    // TODO: Create updater/change support that automatically updates paths and schema on command execution
-    this._formEditor._setState({ schema });
+    // Schema state is automatically updated by SchemaUpdater
   }
 
   revert(context) {
@@ -53,8 +52,7 @@ export class RemoveFormFieldHandler {
     // (3) Add form field and children to form field registry
     runRecursively(formField, (formField) => this._formFieldRegistry.add(formField));
 
-    // TODO: Create updater/change support that automatically updates paths and schema on command execution
-    this._formEditor._setState({ schema });
+    // Schema state is automatically updated by SchemaUpdater
   }
 }
 

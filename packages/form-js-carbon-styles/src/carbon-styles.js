@@ -339,9 +339,10 @@ const DISABLED_STYLES = css`
       &.fjs-form-field.fjs-form-field-radio .fjs-form-field-label,
       &.fjs-form-field.fjs-form-field-checklist .fjs-form-field-label,
       & .fjs-form-field-description {
-        /* todo(pinussilvestrus): mitigate https://github.com/carbon-design-system/carbon/issues/13286 */
+        /* Mitigate https://github.com/carbon-design-system/carbon/issues/13286 */
         color: var(--cds-text-disabled);
         cursor: var(--cursor-disabled, not-allowed);
+        pointer-events: none;
       }
 
       &.fjs-form-field-textfield .fjs-input-group,
@@ -353,20 +354,24 @@ const DISABLED_STYLES = css`
       &.fjs-form-field-select .fjs-input-group.disabled .fjs-select-display,
       &.fjs-form-field-select .fjs-input-group.disabled .fjs-input {
         border: none;
+        pointer-events: none;
       }
     }
 
     .fjs-disabled.fjs-form-field-number .fjs-input-group {
       border: none;
       cursor: var(--cursor-disabled, not-allowed);
+      pointer-events: none;
     }
 
     .fjs-disabled.fjs-form-field-number .fjs-input-group .fjs-input {
       cursor: var(--cursor-disabled, not-allowed);
+      pointer-events: none;
     }
 
     .fjs-form-field.fjs-disabled.fjs-checked .fjs-input[type='checkbox'] {
       cursor: var(--cursor-disabled, not-allowed);
+      pointer-events: none;
       &:before {
         border-color: var(--cds-icon-disabled);
         background-color: var(--cds-icon-disabled);
@@ -380,6 +385,7 @@ const DISABLED_STYLES = css`
 
     .fjs-form-field.fjs-disabled .fjs-input[type='checkbox'] {
       cursor: var(--cursor-disabled, not-allowed);
+      pointer-events: none;
       &:before {
         border-color: var(--cds-icon-disabled);
         cursor: var(--cursor-disabled, not-allowed);
@@ -389,10 +395,12 @@ const DISABLED_STYLES = css`
     .fjs-form-field-datetime.fjs-disabled .fjs-input-group .fjs-input-adornment svg {
       color: var(--cds-icon-disabled);
       cursor: var(--cursor-disabled, not-allowed);
+      pointer-events: none;
     }
 
     .fjs-taglist.fjs-disabled .fjs-taglist-tag {
       background-color: var(--cds-layer-01);
+      pointer-events: none;
 
       .fjs-taglist-tag-label {
         padding: 2px 0px;
@@ -719,6 +727,7 @@ const BUTTON_STYLES = css`
       color: var(--cds-text-on-color-disabled);
       cursor: var(--cursor-disabled, not-allowed);
       outline: none;
+      pointer-events: none;
     }
 
     .fjs-form-field.fjs-form-field-button .fjs-button[type='submit'] {

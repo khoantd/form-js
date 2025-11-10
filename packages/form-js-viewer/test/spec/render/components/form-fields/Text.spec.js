@@ -5,6 +5,7 @@ import { Text } from '../../../../../src/render/components/form-fields/Text';
 import { createFormContainer, expectNoViolations } from '../../../../TestHelper';
 
 import { MockFormContext } from '../helper';
+import { MockMarkdownRenderer } from '../helper/mocks';
 
 let container;
 
@@ -216,27 +217,54 @@ Some _em_ **strong** [text](#text) \`code\`.
     expect(formField.innerHTML).to.eql(expected);
   });
 
-  // TODO: implement mocking renderer
-  it.skip('should allow overriding rendering module', function () {
+  it('should allow overriding rendering module', function () {
     // given
-    const content = '# foo';
-
-    const { container } = createText({
-      initialData: {
-        foo: '#foo',
+    const customRenderer = new MockMarkdownRenderer({
+      render: (markdown) => {
+        // Custom renderer that wraps content in a div
+        return `<div class="custom-renderer">${markdown}</div>`;
       },
+    });
+
+    // when
+    const { container } = createText({
       field: {
-        text: '=foo0',
+        text: '# foo',
         type: 'text',
       },
-      evaluateExpression: () => content,
-      isExpression: () => true,
+      services: {
+        markdownRenderer: customRenderer,
+      },
     });
 
     // then
     const formField = container.querySelector('.fjs-form-field');
 
     expect(formField).to.exist;
+    expect(formField.innerHTML).to.eql('<div class="custom-renderer"># foo</div>');
+  });
+
+  it('should allow overriding rendering module with default behavior', function () {
+    // given
+    // Use MockMarkdownRenderer without custom render function - should use default MarkdownRenderer
+    const defaultRenderer = new MockMarkdownRenderer();
+
+    // when
+    const { container } = createText({
+      field: {
+        text: '# foo',
+        type: 'text',
+      },
+      services: {
+        markdownRenderer: defaultRenderer,
+      },
+    });
+
+    // then
+    const formField = container.querySelector('.fjs-form-field');
+
+    expect(formField).to.exist;
+    // Should render markdown normally
     expect(formField.innerHTML).to.eql('<h1>foo</h1>\n');
   });
 

@@ -1,6 +1,6 @@
 import { PropertiesPanel as BasePropertiesPanel } from '@bpmn-io/properties-panel';
 
-import { useCallback, useMemo, useState, useLayoutEffect } from 'preact/hooks';
+import { useCallback, useMemo, useState, useLayoutEffect, useRef } from 'preact/hooks';
 
 import { reduce, isArray } from 'min-dash';
 
@@ -21,39 +21,80 @@ export function PropertiesPanel(props) {
 
   const { feelPopupContainer } = propertiesPanelConfig;
 
-  const [state, setState] = useState({ selectedFormField: selectionModule.get() || formEditor._getState().schema });
+  const [selectedFormField, setSelectedFormField] = useState(
+    () => selectionModule.get() || formEditor._getState().schema,
+  );
 
-  const selectedFormField = state.selectedFormField;
+  // Use ref to track current selection without causing re-renders
+  const selectedFormFieldRef = useRef(selectedFormField);
+  selectedFormFieldRef.current = selectedFormField;
 
-  const refresh = useCallback(
-    (field) => {
-      // TODO(skaiir): rework state management, re-rendering the whole properties panel is not the way to go
-      // https://github.com/bpmn-io/form-js/issues/686
-      setState({ selectedFormField: selectionModule.get() || formEditor._getState().schema });
-
-      // notify interested parties on property panel updates
-      eventBus.fire('propertiesPanel.updated', {
-        formField: field,
+  // Only update selected field when selection actually changes
+  const handleSelectionChanged = useCallback(
+    (event) => {
+      const newSelection = selectionModule.get() || formEditor._getState().schema;
+      setSelectedFormField((prev) => {
+        // Only update if selection actually changed
+        if (prev === newSelection || (prev && newSelection && prev.id === newSelection.id)) {
+          return prev;
+        }
+        return newSelection;
       });
     },
-    [eventBus, formEditor, selectionModule],
+    [formEditor, selectionModule],
+  );
+
+  // Handle schema changes - only update if the selected field was modified
+  const handleSchemaChanged = useCallback(
+    (event) => {
+      // Handle case where event might be undefined or not have schema property
+      if (!event || !event.schema) {
+        return;
+      }
+
+      const { schema } = event;
+      const currentField = selectedFormFieldRef.current;
+      if (!currentField || !currentField.id) {
+        return;
+      }
+
+      // Find the updated field in the new schema
+      const findFieldInSchema = (components, targetId) => {
+        if (!components) return null;
+        for (const component of components) {
+          if (component.id === targetId) {
+            return component;
+          }
+          if (component.components) {
+            const found = findFieldInSchema(component.components, targetId);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const updatedField = findFieldInSchema(schema.components, currentField.id);
+      if (updatedField && updatedField !== currentField) {
+        setSelectedFormField(updatedField);
+        eventBus.fire('propertiesPanel.updated', {
+          formField: updatedField,
+        });
+      }
+    },
+    [eventBus],
   );
 
   useLayoutEffect(() => {
-    /**
-     * TODO(pinussilvestrus): update with actual updated element,
-     * once we have a proper updater/change support
-     */
-    eventBus.on('changed', refresh);
-    eventBus.on('import.done', refresh);
-    eventBus.on('selection.changed', refresh);
+    eventBus.on('selection.changed', handleSelectionChanged);
+    eventBus.on('changed', handleSchemaChanged);
+    eventBus.on('import.done', handleSelectionChanged);
 
     return () => {
-      eventBus.off('changed', refresh);
-      eventBus.off('import.done', refresh);
-      eventBus.off('selection.changed', refresh);
+      eventBus.off('selection.changed', handleSelectionChanged);
+      eventBus.off('changed', handleSchemaChanged);
+      eventBus.off('import.done', handleSelectionChanged);
     };
-  }, [eventBus, refresh]);
+  }, [eventBus, handleSelectionChanged, handleSchemaChanged]);
 
   const getService = (type, strict = true) => injector.get(type, strict);
 

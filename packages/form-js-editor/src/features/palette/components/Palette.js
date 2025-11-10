@@ -44,8 +44,19 @@ export const PALETTE_GROUPS = [
 
 export function Palette(props) {
   const formFields = useService('formFields');
+  const pluginRegistry = useService('pluginRegistry', false);
 
-  const initialPaletteEntries = useRef(collectPaletteEntries(formFields));
+  const initialPaletteEntries = useRef((() => {
+    const entries = collectPaletteEntries(formFields);
+    
+    // Add plugin palette entries
+    if (pluginRegistry) {
+      const pluginEntries = pluginRegistry.getPaletteEntries();
+      entries.push(...pluginEntries);
+    }
+    
+    return entries;
+  })());
 
   const [paletteEntries, setPaletteEntries] = useState(initialPaletteEntries.current);
 

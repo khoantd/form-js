@@ -6,10 +6,12 @@ import { PathRegistry } from './PathRegistry';
 import { FormLayouter } from './FormLayouter';
 import { FormFieldRegistry } from './FormFieldRegistry';
 import { FormFieldInstanceRegistry } from './FormFieldInstanceRegistry';
+import { SchemaValidator } from './SchemaValidator';
+import { ThemeManager } from './ThemeManager';
 
 import { RenderModule } from '../render';
 
-export { Importer, FieldFactory, FormFieldRegistry, PathRegistry, FormLayouter };
+export { Importer, FieldFactory, FormFieldRegistry, PathRegistry, FormLayouter, SchemaValidator, ThemeManager };
 
 export const CoreModule = {
   __depends__: [RenderModule],
@@ -21,4 +23,6 @@ export const CoreModule = {
   pathRegistry: ['type', PathRegistry],
   formLayouter: ['type', FormLayouter],
   validator: ['type', Validator],
+  schemaValidator: ['type', SchemaValidator],
+  themeManager: ['type', ThemeManager],
 };

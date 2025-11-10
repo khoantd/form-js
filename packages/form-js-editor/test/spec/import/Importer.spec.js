@@ -67,7 +67,12 @@ describe('Importer', function () {
     it('should indicate unsupported field type', inject(async function (formEditor) {
       // given
       const errorSchema = {
-        type: 'unknown',
+        type: 'default',
+        components: [
+          {
+            type: 'unknown',
+          },
+        ],
       };
 
       let error;
@@ -160,7 +165,7 @@ describe('Importer', function () {
       } catch (err) {
         // then
         expect(err).to.exist;
-        expect(err.message).to.equal('form field of type <undefined> not supported');
+        expect(err.message).to.equal('Invalid schema: schema must be an object');
 
         expect(err.warnings).to.exist;
         expect(err.warnings).to.be.empty;

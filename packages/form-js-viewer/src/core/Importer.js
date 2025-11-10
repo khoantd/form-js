@@ -1,4 +1,5 @@
 import { clone } from '../util';
+import { SchemaValidator } from './SchemaValidator';
 
 export class Importer {
   /**
@@ -7,12 +8,14 @@ export class Importer {
    * @param { import('./PathRegistry').PathRegistry } pathRegistry
    * @param { import('./FieldFactory').FieldFactory } fieldFactory
    * @param { import('./FormLayouter').FormLayouter } formLayouter
+   * @param { import('./SchemaValidator').SchemaValidator } [schemaValidator]
    */
-  constructor(formFieldRegistry, pathRegistry, fieldFactory, formLayouter) {
+  constructor(formFieldRegistry, pathRegistry, fieldFactory, formLayouter, schemaValidator) {
     this._formFieldRegistry = formFieldRegistry;
     this._pathRegistry = pathRegistry;
     this._fieldFactory = fieldFactory;
     this._formLayouter = formLayouter;
+    this._schemaValidator = schemaValidator;
   }
 
   /**
@@ -32,11 +35,78 @@ export class Importer {
    * @returns {ImportResult}
    */
   importSchema(schema) {
-    // TODO: Add warnings
     const warnings = [];
+
+    // Validate schema structure before importing
+    if (this._schemaValidator) {
+      try {
+        const validationResult = this._schemaValidator.validate(schema);
+
+        if (!validationResult.valid && validationResult.errors.length > 0) {
+          // Create warnings for validation errors
+          // Only create warnings for non-critical errors (type errors, etc.)
+          // Critical errors (missing required fields) will be caught during import
+          validationResult.errors.forEach((error) => {
+            // Check if this is a critical error that should throw
+            const isCritical =
+              error.keyword === 'required' ||
+              (error.keyword === 'type' && error.instancePath === '' && error.params?.type === 'object');
+
+            if (!isCritical) {
+              const warning = new Error(`Schema validation warning: ${error.message || 'Invalid schema property'}`);
+              warning.instancePath = error.instancePath;
+              warning.schemaPath = error.schemaPath;
+              warning.keyword = error.keyword;
+              warnings.push(warning);
+            }
+          });
+
+          // If there are critical errors, throw an error with warnings attached
+          const criticalErrors = validationResult.errors.filter(
+            (error) =>
+              error.keyword === 'required' ||
+              (error.keyword === 'type' && error.instancePath === '' && error.params?.type === 'object'),
+          );
+
+          if (criticalErrors.length > 0) {
+            const error = new Error(
+              `Schema validation failed: ${criticalErrors.map((e) => e.message || 'Invalid schema').join(', ')}`,
+            );
+            error.warnings = warnings;
+            throw error;
+          }
+        }
+      } catch (err) {
+        // If validation itself fails, add as warning but continue
+        if (err.warnings) {
+          warnings.push(...err.warnings);
+        } else {
+          warnings.push(new Error(`Schema validation error: ${err.message || 'Unknown validation error'}`));
+        }
+      }
+    }
 
     try {
       this._cleanup();
+
+      // Basic schema structure validation
+      if (!schema || typeof schema !== 'object') {
+        const error = new Error('Invalid schema: schema must be an object');
+        error.warnings = warnings;
+        throw error;
+      }
+
+      // Default components to empty array if not provided
+      if (schema.components === undefined) {
+        schema.components = [];
+      }
+
+      if (!Array.isArray(schema.components)) {
+        const error = new Error('Invalid schema: components must be an array');
+        error.warnings = warnings;
+        throw error;
+      }
+
       const importedSchema = this.importFormField(clone(schema));
       this._formLayouter.calculateLayout(clone(importedSchema));
 
@@ -107,4 +177,4 @@ export class Importer {
   }
 }
 
-Importer.$inject = ['formFieldRegistry', 'pathRegistry', 'fieldFactory', 'formLayouter'];
+Importer.$inject = ['formFieldRegistry', 'pathRegistry', 'fieldFactory', 'formLayouter', 'schemaValidator'];

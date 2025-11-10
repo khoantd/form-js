@@ -1,4 +1,4 @@
-import { FieldFactory, Importer, PathRegistry } from '@bpmn-io/form-js-viewer';
+import { FieldFactory, Importer, PathRegistry, SchemaValidator } from '@bpmn-io/form-js-viewer';
 
 import { EventBus } from './EventBus';
 import { DebounceFactory } from './Debounce';
@@ -18,4 +18,5 @@ export const CoreModule = {
   formLayouter: ['type', FormLayouter],
   formLayoutValidator: ['type', FormLayoutValidator],
   fieldFactory: ['type', FieldFactory],
+  schemaValidator: ['type', SchemaValidator],
 };

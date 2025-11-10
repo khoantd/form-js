@@ -1,0 +1,89 @@
+.fjs-pgl-export-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.fjs-pgl-export-button {
+  position: relative;
+  padding-right: 2em;
+}
+
+.fjs-pgl-export-arrow {
+  position: absolute;
+  right: 0.5em;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7em;
+  transition: transform 0.2s;
+}
+
+.fjs-pgl-export-button[aria-expanded="true"] .fjs-pgl-export-arrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.fjs-pgl-export-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25em;
+  min-width: 200px;
+  background: var(--color-white);
+  border: 1px solid var(--color-grey-225-10-75);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.fjs-pgl-export-section {
+  border-bottom: 1px solid var(--color-grey-225-10-85);
+}
+
+.fjs-pgl-export-section:last-child {
+  border-bottom: none;
+}
+
+.fjs-pgl-export-section-title {
+  padding: 0.5em 1em;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-grey-225-10-35);
+  background: var(--color-grey-225-10-95);
+  border-bottom: 1px solid var(--color-grey-225-10-85);
+}
+
+.fjs-pgl-export-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0.75em 1em;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  font-family: var(--font-family);
+}
+
+.fjs-pgl-export-item:hover {
+  background-color: var(--color-grey-225-10-95);
+}
+
+.fjs-pgl-export-item:focus {
+  outline: 2px solid var(--color-blue-205-100-50);
+  outline-offset: -2px;
+}
+
+.fjs-pgl-export-item-label {
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 0.25em;
+}
+
+.fjs-pgl-export-item-desc {
+  font-size: 0.85em;
+  color: var(--color-grey-225-10-35);
+}
+

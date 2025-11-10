@@ -1,0 +1,52 @@
+{
+  "name": "@bpmn-io/form-js-templates",
+  "version": "1.18.0",
+  "description": "Pre-built form templates for common use cases",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.cjs",
+  "module": "dist/index.es.js",
+  "types": "dist/types/index.d.ts",
+  "scripts": {
+    "all": "run-s lint build",
+    "build": "run-p bundle generate-types",
+    "bundle": "rollup -c --failAfterWarnings --bundleConfigAsCjs",
+    "bundle:watch": "rollup -c -w --bundleConfigAsCjs",
+    "lint": "run-s lint:*",
+    "lint:eslint": "eslint .",
+    "generate-types": "tsc --allowJs --skipLibCheck --declaration --emitDeclarationOnly --outDir dist/types src/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bpmn-io/form-js.git",
+    "directory": "packages/form-js-templates"
+  },
+  "author": {
+    "name": "bpmn.io contributors",
+    "url": "https://github.com/bpmn-io"
+  },
+  "dependencies": {
+    "@bpmn-io/form-json-schema": "^1.18.0"
+  },
+  "sideEffects": false,
+  "devDependencies": {
+    "@rollup/plugin-json": "^6.1.0",
+    "rollup": "^4.0.0"
+  }
+}
+

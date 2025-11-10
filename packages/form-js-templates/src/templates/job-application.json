@@ -1,0 +1,164 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "text": "# Job Application\n\nThank you for your interest in joining our team. Please fill out the application form below."
+    },
+    {
+      "key": "firstName",
+      "label": "First Name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "lastName",
+      "label": "Last Name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "email",
+      "label": "Email Address",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "validationType": "email"
+      }
+    },
+    {
+      "key": "phone",
+      "label": "Phone Number",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "validationType": "phone"
+      }
+    },
+    {
+      "key": "position",
+      "label": "Position Applied For",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "experience",
+      "label": "Years of Experience",
+      "type": "number",
+      "validate": {
+        "required": true,
+        "min": 0
+      }
+    },
+    {
+      "key": "education",
+      "label": "Education Level",
+      "type": "select",
+      "values": [
+        {
+          "label": "High School",
+          "value": "high-school"
+        },
+        {
+          "label": "Associate's Degree",
+          "value": "associates"
+        },
+        {
+          "label": "Bachelor's Degree",
+          "value": "bachelors"
+        },
+        {
+          "label": "Master's Degree",
+          "value": "masters"
+        },
+        {
+          "label": "Doctorate",
+          "value": "doctorate"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "skills",
+      "label": "Relevant Skills",
+      "type": "taglist",
+      "values": [
+        {
+          "label": "JavaScript",
+          "value": "javascript"
+        },
+        {
+          "label": "Python",
+          "value": "python"
+        },
+        {
+          "label": "Project Management",
+          "value": "project-management"
+        },
+        {
+          "label": "Communication",
+          "value": "communication"
+        },
+        {
+          "label": "Leadership",
+          "value": "leadership"
+        }
+      ]
+    },
+    {
+      "key": "availability",
+      "label": "Availability",
+      "type": "radio",
+      "values": [
+        {
+          "label": "Immediate",
+          "value": "immediate"
+        },
+        {
+          "label": "Within 2 weeks",
+          "value": "2-weeks"
+        },
+        {
+          "label": "Within 1 month",
+          "value": "1-month"
+        },
+        {
+          "label": "More than 1 month",
+          "value": "more-than-month"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "coverLetter",
+      "label": "Cover Letter",
+      "type": "textarea",
+      "validate": {
+        "required": true,
+        "minLength": 100
+      },
+      "description": "Please provide a brief cover letter (minimum 100 characters)"
+    },
+    {
+      "key": "references",
+      "label": "References Available",
+      "type": "checkbox"
+    },
+    {
+      "key": "submit",
+      "label": "Submit Application",
+      "type": "button"
+    }
+  ]
+}
+

@@ -175,3 +175,32 @@ export class ViewerCommandsMock {
   updateFieldValidation() {}
   updateFieldInstanceValidation() {}
 }
+
+/**
+ * Mock markdown renderer for testing.
+ * Allows overriding the render method to customize markdown rendering behavior.
+ *
+ * @example
+ * // Use default markdown rendering
+ * const renderer = new MockMarkdownRenderer();
+ *
+ * @example
+ * // Override render method
+ * const renderer = new MockMarkdownRenderer({
+ *   render: (markdown) => `<div class="custom">${markdown}</div>`
+ * });
+ */
+export class MockMarkdownRenderer {
+  constructor(options = {}) {
+    const { render } = options;
+
+    // Use custom render function if provided, otherwise use default
+    if (render) {
+      this.render = render;
+    } else {
+      // Use the actual MarkdownRenderer as default
+      const defaultRenderer = new MarkdownRenderer();
+      this.render = (markdown) => defaultRenderer.render(markdown);
+    }
+  }
+}

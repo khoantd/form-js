@@ -48,8 +48,11 @@ function Playground(options) {
     if (file) {
       try {
         this.api.setSchema(JSON.parse(file.contents));
+        // Clear any previous file drop errors on successful parse
+        emitter.emit('formPlayground.fileDropError', null);
       } catch (err) {
-        // TODO(nikku): indicate JSON parse error
+        // Emit error event for file drop JSON parse failure
+        emitter.emit('formPlayground.fileDropError', err);
       }
     }
   });
@@ -123,6 +126,71 @@ function Playground(options) {
   this.attachPaletteContainer = safe((node) => this.api.attachPaletteContainer(node));
 
   this.attachPropertiesPanelContainer = safe((node) => this.api.attachPropertiesPanelContainer(node));
+
+  // Theme API methods
+  this.applyTheme = safe((theme, merge) => {
+    const editor = this.api.getEditor();
+    const form = this.api.getForm();
+    if (editor) {
+      editor.applyTheme(theme, merge);
+    }
+    if (form) {
+      form.applyTheme(theme, merge);
+    }
+  });
+
+  this.getTheme = safe(() => {
+    const editor = this.api.getEditor();
+    return editor ? editor.getTheme() : null;
+  });
+
+  this.resetTheme = safe(() => {
+    const editor = this.api.getEditor();
+    const form = this.api.getForm();
+    if (editor) {
+      editor.resetTheme();
+    }
+    if (form) {
+      form.resetTheme();
+    }
+  });
+
+  this.registerThemePreset = safe((name, theme) => {
+    const editor = this.api.getEditor();
+    const form = this.api.getForm();
+    if (editor) {
+      editor.registerThemePreset(name, theme);
+    }
+    if (form) {
+      form.registerThemePreset(name, theme);
+    }
+  });
+
+  this.getThemePreset = safe((name) => {
+    const editor = this.api.getEditor();
+    return editor ? editor.getThemePreset(name) : null;
+  });
+
+  this.getThemePresets = safe(() => {
+    const editor = this.api.getEditor();
+    return editor ? editor.getThemePresets() : [];
+  });
+
+  this.setThemeProperty = safe((property, value) => {
+    const editor = this.api.getEditor();
+    const form = this.api.getForm();
+    if (editor) {
+      editor.setThemeProperty(property, value);
+    }
+    if (form) {
+      form.setThemeProperty(property, value);
+    }
+  });
+
+  this.getThemeProperty = safe((property) => {
+    const editor = this.api.getEditor();
+    return editor ? editor.getThemeProperty(property) : null;
+  });
 }
 
 export { Playground };

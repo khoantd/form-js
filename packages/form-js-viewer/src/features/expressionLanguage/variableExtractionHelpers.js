@@ -9,6 +9,9 @@ export const getFlavouredFeelVariableNames = (feelString, feelFlavour = 'express
 
   const simpleExpressionTree = _buildSimpleFeelStructureTree(tree, feelString);
 
+  // Keywords that should be ignored during variable extraction
+  const IGNORED_KEYWORDS = new Set(['this', 'super', 'item']);
+
   const variables = (function _unfoldVariables(node) {
     if (node.name === 'PathExpression') {
       // if the path is built on top of a context, we process that context and
@@ -19,14 +22,18 @@ export const getFlavouredFeelVariableNames = (feelString, feelFlavour = 'express
       }
 
       if (Object.keys(specialDepthAccessors).length === 0) {
-        return depth === 0 ? [_getVariableNameAtPathIndex(node, 0)] : [];
+        const variableName = _getVariableNameAtPathIndex(node, 0);
+        return depth === 0 && variableName && !IGNORED_KEYWORDS.has(variableName) ? [variableName] : [];
       }
 
       // if using special depth accessors, use a more complex extraction
       return Array.from(_smartExtractVariableNames(node, depth, specialDepthAccessors));
     }
 
-    if (depth === 0 && node.name === 'VariableName') return [node.variableName];
+    if (depth === 0 && node.name === 'VariableName') {
+      const variableName = node.variableName;
+      return variableName && !IGNORED_KEYWORDS.has(variableName) ? [variableName] : [];
+    }
 
     // for any other kind of node, traverse its children and flatten the result
     if (node.children) {
@@ -35,7 +42,10 @@ export const getFlavouredFeelVariableNames = (feelString, feelFlavour = 'express
       }, []);
 
       // if we are within a filter context, we need to remove the item variable as it is used for iteration there
-      return node.name === 'FilterContext' ? variables.filter((name) => name !== 'item') : variables;
+      // Also filter out ignored keywords
+      return node.name === 'FilterContext'
+        ? variables.filter((name) => name !== 'item' && !IGNORED_KEYWORDS.has(name))
+        : variables.filter((name) => !IGNORED_KEYWORDS.has(name));
     }
 
     return [];
@@ -104,7 +114,12 @@ const _smartExtractVariableNames = (node, initialDepth, specialDepthAccessors) =
     // finally, we check if for the current accessor, there is a scenario where:
     // previous it was at depth -1 (i.e. the root context), and is now at depth 0 (i.e. a variable)
     // these are the variables we need to request, so we add them to the set
-    if (accessorDepthInfos.some((depthInfo) => depthInfo.previous === -1 && depthInfo.current === 0)) {
+    // Also ignore keywords like 'this', 'super', 'item'
+    if (
+      accessorDepthInfos.some((depthInfo) => depthInfo.previous === -1 && depthInfo.current === 0) &&
+      currentAccessor &&
+      !['this', 'super', 'item'].includes(currentAccessor)
+    ) {
       extractedVariables.add(currentAccessor);
     }
   }

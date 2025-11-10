@@ -7,6 +7,7 @@ import {
   TextAreaEntry,
 } from '@bpmn-io/properties-panel';
 
+
 import { get } from 'min-dash';
 
 import Big from 'big.js';
@@ -64,7 +65,12 @@ export function DefaultValueEntry(props) {
     isDefaultVisible: isDefaultVisible((field) => field.type === 'radio' || field.type === 'select'),
   });
 
-  // todo(Skaiir): implement a multiselect equivalent (cf. https://github.com/bpmn-io/form-js/issues/265)
+  entries.push({
+    ...defaultValueBase,
+    component: DefaultValueMultiSelect,
+    isEdited: isMultiSelectEntryEdited,
+    isDefaultVisible: isDefaultVisible((field) => field.type === 'taglist' || field.type === 'checklist'),
+  });
 
   entries.push({
     ...defaultValueBase,
@@ -215,6 +221,73 @@ function DefaultValueSingleSelect(props) {
     label,
     setValue,
   });
+}
+
+function DefaultValueMultiSelect(props) {
+  const { editField, field, id, label } = props;
+
+  const { defaultValue = [], values = [] } = field;
+
+  const path = ['defaultValue'];
+
+  const getValue = () => {
+    const value = get(field, path, []);
+    return Array.isArray(value) ? value : [];
+  };
+
+  const setValue = (selectedValues) => {
+    const newValue = Array.isArray(selectedValues) && selectedValues.length > 0 ? selectedValues : undefined;
+    return editField(field, path, newValue);
+  };
+
+  return (
+    <div class="fjs-properties-panel-entry">
+      <label for={id} class="fjs-properties-panel-label">
+        {label}
+      </label>
+      <div class="fjs-properties-panel-multiselect">
+        {values.map((option) => {
+          const optionValue = typeof option === 'string' ? option : option.value;
+          const optionLabel = typeof option === 'string' ? option : option.label || option.value;
+          const isChecked = getValue().includes(optionValue);
+
+          return (
+            <label key={optionValue} class="fjs-properties-panel-checkbox-label">
+              <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={(e) => {
+                  const currentValue = getValue();
+                  const newValue = e.target.checked
+                    ? [...currentValue, optionValue]
+                    : currentValue.filter((v) => v !== optionValue);
+                  setValue(newValue);
+                }}
+              />
+              <span>{optionLabel}</span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function isMultiSelectEntryEdited(node) {
+  if (!node) {
+    return false;
+  }
+
+  const checkboxes = node.querySelectorAll('input[type="checkbox"]');
+  let hasChecked = false;
+
+  checkboxes.forEach((checkbox) => {
+    if (checkbox.checked) {
+      hasChecked = true;
+    }
+  });
+
+  return hasChecked;
 }
 
 function DefaultValueTextfield(props) {

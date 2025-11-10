@@ -1,0 +1,282 @@
+# Form-JS Cursor Rules
+
+## Project Overview
+This is a monorepo for `@bpmn-io/form-js`, a library for viewing, editing, and simulating JSON-based forms. The project uses:
+- **Monorepo**: Lerna workspace with multiple packages
+- **UI Framework**: Preact (not React) with hooks
+- **Dependency Injection**: didi (similar to Angular DI)
+- **Build**: Rollup for bundling
+- **Testing**: Karma + Mocha + Chai for unit tests, Playwright for E2E
+- **TypeScript**: Used for type checking only (allowJs: true, noEmit: true)
+- **Styling**: SCSS with Carbon Design System support
+
+## Package Structure
+- `form-js`: Main package that re-exports viewer, editor, and playground
+- `form-js-viewer`: Form rendering and viewing
+- `form-js-editor`: Visual form editor
+- `form-js-playground`: Form simulation with input/output data
+- `form-js-carbon-styles`: Carbon Design System integration
+- `form-json-schema`: JSON schema validation
+
+## Architecture Patterns
+
+### Dependency Injection (didi)
+- Services are registered as modules with `$inject` property
+- Use `createInjector()` to bootstrap modules
+- Services access other services via constructor injection
+- Module pattern:
+```javascript
+export const MyModule = {
+  __depends__: [OtherModule], // Optional dependencies
+  myService: ['type', MyService],
+  config: ['value', { ... }], // Value providers
+};
+```
+- Service injection:
+```javascript
+MyService.$inject = ['eventBus', 'form', 'injector'];
+```
+
+### Event-Driven Architecture
+- Use `EventBus` from `diagram-js` for pub/sub
+- Events: `form.init`, `form.clear`, `form.destroy`, `changed`, etc.
+- Subscribe: `eventBus.on('event.type', handler)`
+- Publish: `eventBus.fire('event.type', data)`
+- Always clean up: `eventBus.off('event.type', handler)`
+
+### Module System
+- Core modules in `src/core/`
+- Feature modules in `src/features/`
+- Render modules in `src/render/`
+- Each module exports a module definition object
+- Modules can depend on other modules via `__depends__`
+
+## Code Style & Conventions
+
+### JavaScript/TypeScript
+- Use ES modules (`import`/`export`)
+- JSDoc for type annotations (TypeScript is for type checking only)
+- Use `@typedef` for complex types
+- Prefer named exports over default exports
+- Use `min-dash` utilities instead of lodash where possible
+- Use `min-dom` for DOM manipulation utilities
+
+### Preact Components
+- Use functional components with hooks
+- Import from `preact` and `preact/hooks`
+- Use `useService` hook to access DI services
+- Context pattern: `FormContext`, `FormRenderContext`, `LocalExpressionContext`
+- Component structure:
+```javascript
+import { Fragment } from 'preact';
+import { useCallback, useState } from 'preact/hooks';
+import { useService } from '../hooks';
+
+export function MyComponent(props) {
+  const eventBus = useService('eventBus');
+  const [state, setState] = useState(initialState);
+  
+  const handler = useCallback(() => {
+    // handler logic
+  }, [dependencies]);
+  
+  return <div>...</div>;
+}
+```
+
+### Naming Conventions
+- Classes: PascalCase (`FormEditor`, `EventBus`)
+- Functions: camelCase (`createForm`, `importSchema`)
+- Constants: UPPER_SNAKE_CASE or camelCase
+- Files: PascalCase for classes, camelCase for utilities
+- CSS classes: `fjs-` prefix (e.g., `fjs-form`, `fjs-editor`)
+
+### File Organization
+- One class/component per file
+- Co-locate related files (components, hooks, utils)
+- Test files: `*.spec.js` in `test/spec/`
+- Test helpers: `test/TestHelper.js`
+- Types: `types.d.ts` or inline JSDoc
+
+## Import Rules
+
+### Package Boundaries
+- Packages should NOT import from sibling packages directly
+- Use published package names: `@bpmn-io/form-js-viewer`
+- Exception: Editor can import from viewer (it's a dependency)
+- Main `form-js` package re-exports from other packages
+
+### Import Order
+1. External dependencies
+2. Internal package imports (with `@bpmn-io/` prefix)
+3. Relative imports
+4. Types (if separate)
+
+### Restricted Paths
+- `form-js/src` cannot import from other packages (except `form-js`)
+- Each package's `src` should only import from its own package
+- Use ESLint import rules to enforce boundaries
+
+## Testing Patterns
+
+### Unit Tests (Karma + Mocha)
+- Test files: `test/spec/**/*.spec.js`
+- Use `@testing-library/preact` for component tests
+- Use `sinon` for spies/stubs
+- Use `chai` for assertions
+- Test helpers: `TestHelper.js`
+- Single start pattern: `isSingleStart('basic')` for manual testing
+
+### E2E Tests (Playwright)
+- Test files: `e2e/**/*.spec.js`
+- Visual regression tests with snapshots
+- Use `@axe-core/playwright` for accessibility testing
+- Test fixtures: `e2e/test-fixtures.js`
+
+### Test Structure
+```javascript
+import { expect } from 'chai';
+import { spy } from 'sinon';
+import { Form } from '../../src';
+
+describe('Form', function() {
+  it('should do something', function() {
+    // given
+    const form = new Form();
+    
+    // when
+    form.importSchema(schema);
+    
+    // then
+    expect(form).to.exist;
+  });
+});
+```
+
+## Build & Development
+
+### Build System
+- Rollup for bundling (ESM + CJS + UMD)
+- SCSS compilation with `sass`
+- TypeScript for type generation only (`generate-types` script)
+- Build outputs: `dist/` directory
+
+### Scripts
+- `npm run build`: Build all packages
+- `npm run dev`: Watch mode for development
+- `npm run test`: Run all tests
+- `npm run start`: Start dev server for specific package
+- `npm run all`: Build + test + lint
+
+### Development Workflow
+- Use `bundle:watch` for hot reloading
+- Use `SINGLE_START` env var for focused testing
+- Run tests in watch mode: `npm test -- --auto-watch`
+
+## Form Schema
+
+### Schema Structure
+- Forms are JSON-based
+- Schema version: 19 (exported as `schemaVersion`)
+- Components array defines form fields
+- Each component has: `type`, `key`, `label`, `validate`, `layout`, etc.
+- See `docs/FORM_SCHEMA.md` for full specification
+
+### Schema Validation
+- Use `@bpmn-io/form-json-schema` for validation
+- Validator uses AJV with custom error messages
+- Schema version must match supported version
+
+## Common Patterns
+
+### Service Creation
+```javascript
+export class MyService {
+  constructor(eventBus, form) {
+    this._eventBus = eventBus;
+    this._form = form;
+  }
+}
+
+MyService.$inject = ['eventBus', 'form'];
+```
+
+### Event Handling
+```javascript
+// In constructor or init
+eventBus.on('form.init', () => {
+  // initialization
+});
+
+// Cleanup in destroy
+eventBus.off('form.init', handler);
+```
+
+### State Management
+- Form state managed in `Form` class (`_state` property)
+- Use `form._getState()` to read state
+- Use `form._update()` to update state
+- State changes emit `changed` event
+- Preact components subscribe to state changes via EventBus
+
+### Component Rendering
+- Use `render()` from `preact` to mount components
+- Render to container element
+- Clean up: `render(null, container)` on destroy
+- Use portals for rendering outside main tree: `createPortal` from `preact/compat`
+
+## Code Quality
+
+### Linting
+- ESLint with `eslint-plugin-bpmn-io`
+- Prettier for formatting
+- Import rules enforced
+- React Hooks rules (for Preact)
+
+### Type Checking
+- TypeScript in check-only mode
+- JSDoc for runtime types
+- `.d.ts` files for type definitions
+- Use `@ts-ignore` sparingly and with comments
+
+### Error Handling
+- Use descriptive error messages
+- Validate inputs early
+- Use `strict` mode for service injection when appropriate
+- Handle async operations with proper error handling
+
+## Best Practices
+
+1. **Always clean up**: Remove event listeners, destroy services, unmount components
+2. **Use dependency injection**: Don't create services directly, use DI
+3. **Follow module pattern**: Register services as modules
+4. **Test in isolation**: Use mock injectors for testing
+5. **Accessibility**: Use ARIA labels, semantic HTML
+6. **Performance**: Use `useCallback`, `useMemo` for expensive operations
+7. **Code splitting**: Keep packages independent, lazy load when possible
+8. **Documentation**: JSDoc for public APIs, README for packages
+
+## Common Pitfalls to Avoid
+
+1. ❌ Don't import from sibling packages directly
+2. ❌ Don't forget to clean up event listeners
+3. ❌ Don't use React imports (use Preact)
+4. ❌ Don't bypass DI system
+5. ❌ Don't mutate state directly (use update methods)
+6. ❌ Don't forget `$inject` property on services
+7. ❌ Don't use default exports for main exports
+8. ❌ Don't forget to handle async operations properly
+
+## File Extensions
+- `.js` for JavaScript source files
+- `.ts` for TypeScript type definitions only
+- `.scss` for stylesheets
+- `.spec.js` for test files
+- `.d.ts` for TypeScript declaration files
+
+## CSS Conventions
+- Use BEM-like naming with `fjs-` prefix
+- Scoped styles per component
+- Use CSS variables for theming
+- Carbon styles in separate package
+

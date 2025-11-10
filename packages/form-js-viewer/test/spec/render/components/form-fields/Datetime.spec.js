@@ -291,10 +291,10 @@ describe('Datetime', function () {
       });
     });
 
-    it('should disable dates prior to 1900', async function () {
+    it('should allow dates prior to 1900', async function () {
       // given
       const { container } = createDatetime({
-        value: '1900-01-01',
+        value: '1899-12-31',
         field: {
           ...dateField,
           disallowPassedDates: false,
@@ -308,7 +308,34 @@ describe('Datetime', function () {
       const previousMonthButton = container.querySelector('.flatpickr-prev-month');
 
       // then
-      expect([...previousMonthButton.classList]).to.include('flatpickr-disabled');
+      // Previous month button should not be disabled when allowing dates prior to 1900
+      expect([...previousMonthButton.classList]).to.not.include('flatpickr-disabled');
+    });
+
+    it('should handle historical dates correctly', async function () {
+      // given
+      const onChangeSpy = spy();
+      const { container } = createDatetime({
+        onChange: onChangeSpy,
+        value: '1850-06-15',
+        field: {
+          ...dateField,
+          disallowPassedDates: false,
+        },
+      });
+
+      // when
+      const dateInput = container.querySelector('input[type="text"]');
+      await userEvent.click(dateInput);
+
+      // Verify the date is displayed correctly
+      await waitFor(() => {
+        expect(dateInput.value).to.include('1850');
+      });
+
+      // then
+      // Historical dates should be supported
+      expect(onChangeSpy).to.have.been.called;
     });
   });
 

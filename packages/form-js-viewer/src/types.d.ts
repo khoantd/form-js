@@ -24,11 +24,38 @@ export interface FormOptions {
   injector?: Injector;
   modules?: Module[];
   properties?: FormProperties;
+  theme?: Theme | string;
 }
 
 export interface CreateFormOptions extends FormOptions {
   data?: Data;
   schema: Schema;
+}
+
+/**
+ * Theme configuration object.
+ */
+export interface Theme {
+  /**
+   * CSS custom properties (variables) to apply.
+   */
+  variables?: Record<string, string>;
+  /**
+   * CSS classes to add to the container.
+   */
+  classes?: string[];
+  /**
+   * Inline styles to apply.
+   */
+  styles?: Record<string, string>;
+}
+
+/**
+ * Theme preset definition.
+ */
+export interface ThemePreset {
+  name: string;
+  theme: Theme;
 }
 
 export { Injector };

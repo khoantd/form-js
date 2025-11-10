@@ -1,0 +1,121 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "text": "# Customer Satisfaction Survey\n\nYour feedback helps us improve our services. Thank you for taking the time to complete this survey."
+    },
+    {
+      "key": "overallSatisfaction",
+      "label": "Overall, how satisfied are you with our service?",
+      "type": "radio",
+      "values": [
+        {
+          "label": "Very Satisfied",
+          "value": "very-satisfied"
+        },
+        {
+          "label": "Satisfied",
+          "value": "satisfied"
+        },
+        {
+          "label": "Neutral",
+          "value": "neutral"
+        },
+        {
+          "label": "Dissatisfied",
+          "value": "dissatisfied"
+        },
+        {
+          "label": "Very Dissatisfied",
+          "value": "very-dissatisfied"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "recommendation",
+      "label": "How likely are you to recommend us to a friend or colleague?",
+      "type": "number",
+      "validate": {
+        "required": true,
+        "min": 0,
+        "max": 10
+      },
+      "description": "Rate from 0 (not likely) to 10 (very likely)"
+    },
+    {
+      "key": "improvements",
+      "label": "What areas would you like to see improved?",
+      "type": "checklist",
+      "values": [
+        {
+          "label": "Customer Service",
+          "value": "customer-service"
+        },
+        {
+          "label": "Product Quality",
+          "value": "product-quality"
+        },
+        {
+          "label": "Pricing",
+          "value": "pricing"
+        },
+        {
+          "label": "Website/App Experience",
+          "value": "website-app"
+        },
+        {
+          "label": "Delivery Speed",
+          "value": "delivery-speed"
+        }
+      ]
+    },
+    {
+      "key": "favoriteFeatures",
+      "label": "What are your favorite features?",
+      "type": "taglist",
+      "values": [
+        {
+          "label": "Easy to Use",
+          "value": "easy-to-use"
+        },
+        {
+          "label": "Fast Performance",
+          "value": "fast-performance"
+        },
+        {
+          "label": "Great Design",
+          "value": "great-design"
+        },
+        {
+          "label": "Reliable",
+          "value": "reliable"
+        }
+      ]
+    },
+    {
+      "key": "comments",
+      "label": "Additional Comments",
+      "type": "textarea",
+      "description": "Please share any additional feedback or suggestions"
+    },
+    {
+      "key": "email",
+      "label": "Email (optional)",
+      "type": "textfield",
+      "validate": {
+        "validationType": "email"
+      },
+      "description": "If you'd like us to follow up with you"
+    },
+    {
+      "key": "submit",
+      "label": "Submit Survey",
+      "type": "button"
+    }
+  ]
+}
+

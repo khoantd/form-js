@@ -73,8 +73,6 @@ export class MoveFormFieldHandler {
         this._pathRegistry.unclaimPath(this._pathRegistry.getValuePath(field));
       });
 
-      formField._parent = targetFormField.id;
-
       // (2) Remove form field
       arrayRemove(get(schema, sourcePath), sourceIndex);
 
@@ -83,16 +81,20 @@ export class MoveFormFieldHandler {
 
       const targetPath = [...targetFormField._path, 'components'];
 
-      // (4) Add to row or create new one
+      // (4) Update parent relationship (registry maintains object graph)
+      this._formFieldRegistry.updateParent(formField, targetFormField);
+      formField._parent = targetFormField.id;
+
+      // (5) Add to row or create new one
       updateRow(formField, targetRow ? targetRow.id : this._formLayouter.nextRowId());
 
-      // (5) Add form field
+      // (6) Add form field
       arrayAdd(get(schema, targetPath), targetIndex, formField);
 
-      // (6) Update internal paths of siblings (and their children)
+      // (7) Update internal paths of siblings (and their children)
       get(schema, targetPath).forEach((formField, index) => updatePath(this._formFieldRegistry, formField, index));
 
-      // (7) Reregister form field (and children) from path registry
+      // (8) Reregister form field (and children) from path registry
       this._pathRegistry.executeRecursivelyOnFields(formField, ({ field, isClosed, isRepeatable }) => {
         this._pathRegistry.claimPath(this._pathRegistry.getValuePath(field), {
           isClosed,
@@ -102,8 +104,7 @@ export class MoveFormFieldHandler {
       });
     }
 
-    // TODO: Create updater/change support that automatically updates paths and schema on command execution
-    this._formEditor._setState({ schema });
+    // Schema state is automatically updated by SchemaUpdater
   }
 }
 

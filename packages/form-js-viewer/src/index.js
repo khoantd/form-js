@@ -1,6 +1,6 @@
 import { Form } from './Form';
 
-export { FormFieldRegistry, FormLayouter, Importer, FieldFactory, PathRegistry } from './core';
+export { FormFieldRegistry, FormLayouter, Importer, FieldFactory, PathRegistry, SchemaValidator, ThemeManager } from './core';
 export * from './render';
 export * from './util';
 export * from './features';

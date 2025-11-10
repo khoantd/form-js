@@ -60,8 +60,10 @@ export function Datepicker(props) {
       static: true,
       clickOpens: false,
 
-      // TODO: support dates prior to 1900 (https://github.com/bpmn-io/form-js/issues/533)
-      minDate: disallowPassedDates ? 'today' : '01/01/1900',
+      // Support dates prior to 1900 - removed minDate restriction for historical dates
+      // JavaScript Date can handle dates from approximately -271821-04-20 to 275760-09-13
+      // Setting to undefined allows all valid dates, or use a very early date as fallback
+      minDate: disallowPassedDates ? 'today' : undefined,
       errorHandler: () => {
         /* do nothing, we expect the values to sometimes be erronous and we don't want warnings polluting the console */
       },

@@ -9,8 +9,12 @@ import { Form, getSchemaVariables } from '@bpmn-io/form-js-viewer';
 import { FormEditor } from '@bpmn-io/form-js-editor';
 
 import { EmbedModal } from './EmbedModal';
+import { ErrorNotification } from './ErrorNotification';
+import { ExportMenu } from './ExportMenu';
 import { JSONEditor } from './JSONEditor';
 import { Section } from './Section';
+import { TemplatePicker } from './TemplatePicker';
+import { generateDemoDataForField } from '../util/generateDemoData';
 
 import './FileDrop.css';
 import './PlaygroundRoot.css';
@@ -45,14 +49,29 @@ export function PlaygroundRoot(config) {
   const outputDataRef = useRef();
 
   const [showEmbed, setShowEmbed] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [schema, setSchema] = useState();
   const [data, setData] = useState();
+  const [fileDropError, setFileDropError] = useState(null);
+  const [inputDataError, setInputDataError] = useState(null);
 
-  const load = useCallback((schema, data) => {
-    formEditorRef.current.importSchema(schema, data);
-    inputDataRef.current.setValue(toString(data));
+  const load = useCallback(async (schema, data) => {
+    // Import schema (this is async and will fire import.done event)
+    await formEditorRef.current.importSchema(schema);
+    
     setSchema(schema);
-    setData(data);
+    
+    // Only set input editor value if data is not empty
+    // Otherwise, let import.done handler generate demo data
+    if (data && Object.keys(data).length > 0) {
+      inputDataRef.current.setValue(toString(data));
+      setData(data);
+    } else {
+      // Clear the editor to show placeholder initially
+      // The import.done handler will populate it with demo data
+      // Don't set data to {} here - let import.done handler set it with demo data
+      inputDataRef.current.setValue('');
+    }
   }, []);
 
   // initialize and link the editors
@@ -96,19 +115,29 @@ export function PlaygroundRoot(config) {
       additionalModules: [...(additionalModules || []), ...(editorAdditionalModules || [])],
     }));
 
+    // Handle formField.add events (when fields are added via commands, e.g., from palette)
     formEditor.on('formField.add', ({ formField }) => {
       const formFields = formEditor.get('formFields');
       const { config } = formFields.get(formField.type);
       const { generateInitialDemoData } = config;
       const { id } = formField;
 
-      if (!isFunction(generateInitialDemoData)) {
+      if (!id) {
         return;
       }
 
-      const initialDemoData = generateInitialDemoData(formField);
+      let initialDemoData;
 
-      if ([initialDemoData, id].includes(undefined)) {
+      // First, try to use field's own generateInitialDemoData function
+      if (isFunction(generateInitialDemoData)) {
+        initialDemoData = generateInitialDemoData(formField);
+      } else {
+        // Fallback to our utility function for common field types
+        initialDemoData = generateDemoDataForField(formField);
+      }
+
+      // Only update if we have valid demo data
+      if (initialDemoData === undefined) {
         return;
       }
 
@@ -122,6 +151,60 @@ export function PlaygroundRoot(config) {
 
         return newData;
       });
+    });
+
+    // Handle import.done events (when schema is imported, e.g., from template)
+    // Generate demo data for all fields after import
+    formEditor.on('import.done', () => {
+      // Use setTimeout to ensure this runs after load function completes
+      // This ensures the editor is ready and state is properly initialized
+      setTimeout(() => {
+        const formFieldRegistry = formEditor.get('formFieldRegistry');
+        const formFields = formEditor.get('formFields');
+        const allFields = formFieldRegistry.getAll();
+        
+        const demoData = {};
+        let hasDemoData = false;
+
+        allFields.forEach((formField) => {
+          const { id, type, key } = formField;
+
+          // Skip non-keyed fields (text, html, button, spacer, separator, etc.)
+          if (!id || !key) {
+            return;
+          }
+
+          const { config } = formFields.get(type);
+          const { generateInitialDemoData } = config;
+
+          let initialDemoData;
+
+          // First, try to use field's own generateInitialDemoData function
+          if (isFunction(generateInitialDemoData)) {
+            initialDemoData = generateInitialDemoData(formField);
+          } else {
+            // Fallback to our utility function for common field types
+            initialDemoData = generateDemoDataForField(formField);
+          }
+
+          // Only add if we have valid demo data
+          if (initialDemoData !== undefined) {
+            demoData[id] = initialDemoData;
+            hasDemoData = true;
+          }
+        });
+
+        // Update data if we generated any demo data
+        if (hasDemoData) {
+          // Always set demo data directly (don't merge with existing empty data)
+          setData(demoData);
+          
+          // Always update the input editor with the new data
+          if (inputDataRef.current) {
+            inputDataRef.current.setValue(toString(demoData));
+          }
+        }
+      }, 0);
     });
 
     formEditor.on('changed', () => {
@@ -144,10 +227,25 @@ export function PlaygroundRoot(config) {
     formViewer.on('formFieldInstance.removed', updateOutputData);
 
     inputDataEditor.on('changed', (event) => {
+      const value = event.value.trim();
+      
+      // Handle empty or whitespace-only input - treat as empty object
+      if (!value) {
+        setData({});
+        setInputDataError(null);
+        emit('formPlayground.inputDataError', null);
+        return;
+      }
+      
       try {
-        setData(JSON.parse(event.value));
+        const parsedData = JSON.parse(value);
+        setData(parsedData);
+        // Clear error on successful parse
+        setInputDataError(null);
+        emit('formPlayground.inputDataError', null);
       } catch (error) {
-        // notify interested about input data error
+        // Set error state and notify interested parties
+        setInputDataError(error);
         emit('formPlayground.inputDataError', error);
       }
     });
@@ -229,6 +327,25 @@ export function PlaygroundRoot(config) {
     apiLinkTarget.api.load = load;
   }, [apiLinkTarget, schema, data, load]);
 
+  // Listen for file drop errors from parent Playground instance
+  useEffect(() => {
+    if (!apiLinkTarget || !apiLinkTarget.on) {
+      return;
+    }
+
+    const handleFileDropError = (error) => {
+      setFileDropError(error);
+    };
+
+    apiLinkTarget.on('formPlayground.fileDropError', handleFileDropError);
+
+    return () => {
+      if (apiLinkTarget.off) {
+        apiLinkTarget.off('formPlayground.fileDropError', handleFileDropError);
+      }
+    };
+  }, [apiLinkTarget]);
+
   const handleDownload = useCallback(() => {
     download(JSON.stringify(schema, null, '  '), 'form.json', 'text/json');
   }, [schema]);
@@ -241,19 +358,41 @@ export function PlaygroundRoot(config) {
     setShowEmbed(true);
   }, []);
 
+  const showTemplatePickerModal = useCallback(() => {
+    setShowTemplatePicker(true);
+  }, []);
+
+  const hideTemplatePickerModal = useCallback(() => {
+    setShowTemplatePicker(false);
+  }, []);
+
+  const handleTemplateSelect = useCallback(
+    (templateSchema) => {
+      load(templateSchema, {});
+    },
+    [load],
+  );
+
   return (
     <div class={classNames('fjs-container', 'fjs-pgl-root')}>
       <div class="fjs-pgl-modals">
         {showEmbed ? <EmbedModal schema={schema} data={data} onClose={hideEmbedModal} /> : null}
+        {showTemplatePicker ? <TemplatePicker onSelect={handleTemplateSelect} onClose={hideTemplatePickerModal} /> : null}
       </div>
       <div class="fjs-pgl-palette-container" ref={paletteContainerRef} />
       <div class="fjs-pgl-main">
         <Section name="Form Definition">
           {displayActions && (
             <Section.HeaderItem>
-              <button type="button" class="fjs-pgl-button" title="Download form definition" onClick={handleDownload}>
-                Download
+              <button type="button" class="fjs-pgl-button" title="Load a form template" onClick={showTemplatePickerModal}>
+                Templates
               </button>
+            </Section.HeaderItem>
+          )}
+
+          {displayActions && (
+            <Section.HeaderItem>
+              <ExportMenu schema={schema} data={data} onExportJSON={handleDownload} />
             </Section.HeaderItem>
           )}
 
@@ -265,12 +404,30 @@ export function PlaygroundRoot(config) {
             </Section.HeaderItem>
           )}
 
+          {fileDropError && (
+            <ErrorNotification
+              error={fileDropError}
+              context="file"
+              onDismiss={() => setFileDropError(null)}
+            />
+          )}
+
           <div ref={editorContainerRef} class="fjs-pgl-form-container"></div>
         </Section>
         <Section name="Form Preview">
           <div ref={viewerContainerRef} class="fjs-pgl-form-container"></div>
         </Section>
         <Section name="Form Input">
+          {inputDataError && (
+            <ErrorNotification
+              error={inputDataError}
+              context="input"
+              onDismiss={() => {
+                setInputDataError(null);
+                emit('formPlayground.inputDataError', null);
+              }}
+            />
+          )}
           <div ref={inputDataContainerRef} class="fjs-pgl-text-container"></div>
         </Section>
         <Section name="Form Output">

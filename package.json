@@ -13,7 +13,7 @@
     "dev:editor": "npm run dev -- @bpmn-io/form-js-editor",
     "dev:playground": "npm run dev -- @bpmn-io/form-js-playground",
     "dev:carbon": "npm run dev -- @bpmn-io/form-js-carbon-styles",
-    "lerna-dev": "lerna run dev --stream --scope",
+    "lerna-dev": "node scripts/lerna-dev.js",
     "lerna-build-watch": "lerna run bundle:watch --stream --parallel --include-dependencies --scope",
     "lerna-publish": "lerna publish -m \"chore(project): publish %s\"",
     "lint": "eslint packages",

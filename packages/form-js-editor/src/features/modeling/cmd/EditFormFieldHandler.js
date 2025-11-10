@@ -32,8 +32,7 @@ export class EditFormFieldHandler {
 
     context.oldProperties = oldProperties;
 
-    // TODO: Create updater/change support that automatically updates paths and schema on command execution
-    this._formEditor._setState({ schema });
+    // Schema state is automatically updated by SchemaUpdater
 
     return formField;
   }
@@ -55,8 +54,7 @@ export class EditFormFieldHandler {
       }
     }
 
-    // TODO: Create updater/change support that automatically updates paths and schema on command execution
-    this._formEditor._setState({ schema });
+    // Schema state is automatically updated by SchemaUpdater
 
     return formField;
   }

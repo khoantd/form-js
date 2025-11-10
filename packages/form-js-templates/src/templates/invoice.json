@@ -1,0 +1,117 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "text": "# Invoice Form\n\nCreate and manage invoices with this template."
+    },
+    {
+      "key": "invoiceNumber",
+      "label": "Invoice Number",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "pattern": "^INV-[0-9]+$"
+      },
+      "description": "Format: INV-12345"
+    },
+    {
+      "key": "invoiceDate",
+      "label": "Invoice Date",
+      "type": "datetime",
+      "subtype": "date",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "dueDate",
+      "label": "Due Date",
+      "type": "datetime",
+      "subtype": "date",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "billTo",
+      "label": "Bill To",
+      "type": "textarea",
+      "validate": {
+        "required": true
+      },
+      "description": "Customer name and address"
+    },
+    {
+      "key": "itemDescription",
+      "label": "Item Description",
+      "type": "textarea",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "quantity",
+      "label": "Quantity",
+      "type": "number",
+      "validate": {
+        "required": true,
+        "min": 1
+      }
+    },
+    {
+      "key": "unitPrice",
+      "label": "Unit Price",
+      "type": "number",
+      "validate": {
+        "required": true,
+        "min": 0
+      }
+    },
+    {
+      "key": "taxRate",
+      "label": "Tax Rate (%)",
+      "type": "number",
+      "defaultValue": 0,
+      "validate": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "key": "paymentMethod",
+      "label": "Payment Method",
+      "type": "select",
+      "values": [
+        {
+          "label": "Credit Card",
+          "value": "credit-card"
+        },
+        {
+          "label": "Bank Transfer",
+          "value": "bank-transfer"
+        },
+        {
+          "label": "Check",
+          "value": "check"
+        },
+        {
+          "label": "Cash",
+          "value": "cash"
+        }
+      ]
+    },
+    {
+      "key": "notes",
+      "label": "Notes",
+      "type": "textarea",
+      "description": "Additional notes or terms"
+    },
+    {
+      "key": "submit",
+      "label": "Generate Invoice",
+      "type": "button"
+    }
+  ]
+}
+

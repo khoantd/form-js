@@ -839,3 +839,174 @@
 .gu-mirror.fjs-drag-row-move .cds--row {
   flex-wrap: nowrap !important;
 }
+
+/* Preview Mode Styles */
+.fjs-preview-button-container {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+
+.fjs-preview-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--cds-button-primary, var(--color-blue-205-100-50));
+  color: var(--cds-text-on-color, var(--color-white));
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.fjs-preview-button:hover {
+  background: var(--cds-button-primary-hover, var(--color-blue-205-100-55));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16);
+}
+
+.fjs-preview-button:active {
+  background: var(--cds-button-primary-active, var(--color-blue-205-100-60));
+}
+
+.fjs-preview-button:focus {
+  outline: 2px solid var(--cds-focus, var(--color-blue-205-100-50));
+  outline-offset: 2px;
+}
+
+.fjs-preview-button svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.fjs-preview-button-label {
+  white-space: nowrap;
+}
+
+.fjs-preview-button-active {
+  background: var(--cds-button-secondary, var(--color-grey-225-10-15));
+  color: var(--cds-text-primary, var(--color-white));
+}
+
+.fjs-preview-button-active:hover {
+  background: var(--cds-button-secondary-hover, var(--color-grey-225-10-25));
+}
+
+.fjs-form-editor-preview-mode .fjs-palette-container,
+.fjs-form-editor-preview-mode .fjs-editor-properties-container {
+  display: none;
+}
+
+.fjs-preview-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fjs-preview-modal {
+  position: relative;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  background: var(--cds-background, var(--color-white));
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fjs-preview-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--cds-border-strong, var(--cds-border-strong-01, var(--color-grey-225-10-80)));
+  background: var(--cds-layer, var(--cds-layer-01, var(--color-grey-225-10-95)));
+}
+
+.fjs-preview-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--cds-text-primary, var(--color-grey-225-10-15));
+}
+
+.fjs-preview-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--cds-icon-secondary, var(--color-grey-225-10-35));
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.fjs-preview-modal-close:hover {
+  background: var(--cds-background-hover, var(--color-grey-225-10-90));
+  color: var(--cds-icon-primary, var(--color-grey-225-10-15));
+}
+
+.fjs-preview-modal-close:focus {
+  outline: 2px solid var(--cds-focus, var(--color-blue-205-100-50));
+  outline-offset: 2px;
+}
+
+.fjs-preview-modal-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.fjs-preview-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.fjs-preview-modal-form-container {
+  min-height: 200px;
+}
+
+.fjs-preview-modal-form-container .fjs-form {
+  max-width: 100%;
+}

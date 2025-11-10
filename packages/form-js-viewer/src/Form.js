@@ -65,7 +65,7 @@ export class Form {
      */
     this._container = createFormContainer();
 
-    const { container, injector = this._createInjector(options, this._container), properties = {} } = options;
+    const { container, injector = this._createInjector(options, this._container), properties = {}, theme } = options;
 
     /**
      * @private
@@ -84,6 +84,19 @@ export class Form {
     this.invoke = injector.invoke;
 
     this.get('eventBus').fire('form.init');
+
+    // Apply initial theme if provided
+    if (theme) {
+      try {
+        const themeManager = this.get('themeManager', false);
+        if (themeManager) {
+          themeManager.applyTheme(theme, false);
+        }
+      } catch (error) {
+        // Theme manager might not be available, ignore
+        console.warn('Failed to apply initial theme:', error);
+      }
+    }
 
     if (container) {
       this.attachTo(container);
@@ -292,6 +305,113 @@ export class Form {
   }
 
   /**
+   * Apply a theme to the form.
+   *
+   * @param {import('./types').Theme|string} theme - Theme object or preset name
+   * @param {boolean} [merge=true] - Whether to merge with current theme
+   */
+  applyTheme(theme, merge = true) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    themeManager.applyTheme(theme, merge);
+  }
+
+  /**
+   * Get the current theme.
+   *
+   * @returns {import('./types').Theme}
+   */
+  getTheme() {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    return themeManager.getTheme();
+  }
+
+  /**
+   * Reset theme to default.
+   */
+  resetTheme() {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    themeManager.resetTheme();
+  }
+
+  /**
+   * Register a theme preset.
+   *
+   * @param {string} name - Preset name
+   * @param {import('./types').Theme} theme - Theme object
+   */
+  registerThemePreset(name, theme) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    themeManager.registerPreset(name, theme);
+  }
+
+  /**
+   * Get a theme preset.
+   *
+   * @param {string} name - Preset name
+   * @returns {import('./types').Theme|null}
+   */
+  getThemePreset(name) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    return themeManager.getPreset(name);
+  }
+
+  /**
+   * Get all registered theme presets.
+   *
+   * @returns {Array<{name: string, theme: import('./types').Theme}>}
+   */
+  getThemePresets() {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    return themeManager.getPresets();
+  }
+
+  /**
+   * Set a theme property.
+   *
+   * @param {string} property - CSS variable name
+   * @param {string} value - CSS value
+   */
+  setThemeProperty(property, value) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    themeManager.setProperty(property, value);
+  }
+
+  /**
+   * Get a theme property.
+   *
+   * @param {string} property - CSS variable name
+   * @returns {string|null}
+   */
+  getThemeProperty(property) {
+    const themeManager = this.get('themeManager', false);
+    if (!themeManager) {
+      throw new Error('Theme manager not available');
+    }
+    return themeManager.getProperty(property);
+  }
+
+  /**
    * @private
    *
    * @param {FormOptions} options
@@ -424,6 +544,7 @@ export class Form {
     const formFieldRegistry = this.get('formFieldRegistry');
     const formFields = this.get('formFields');
     const pathRegistry = this.get('pathRegistry');
+    const eventBus = this.get('eventBus');
 
     function initializeFieldDataRecursively(initializedData, formField, indexes) {
       const { defaultValue, type, isRepeating } = formField;
@@ -436,7 +557,7 @@ export class Form {
       if (fieldConfig.keyed) {
         // (a) Retrieve and sanitize data from input
         if (!isUndefined(valueData) && fieldConfig.sanitizeValue) {
-          valueData = fieldConfig.sanitizeValue({ formField, data, value: valueData });
+          valueData = fieldConfig.sanitizeValue({ formField, data, value: valueData, eventBus });
         }
 
         // (b) Initialize field value in output data

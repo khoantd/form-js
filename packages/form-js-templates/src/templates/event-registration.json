@@ -1,0 +1,126 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "text": "# Event Registration\n\nRegister for our upcoming event. We look forward to seeing you there!"
+    },
+    {
+      "key": "firstName",
+      "label": "First Name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "lastName",
+      "label": "Last Name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "email",
+      "label": "Email Address",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "validationType": "email"
+      }
+    },
+    {
+      "key": "phone",
+      "label": "Phone Number",
+      "type": "textfield",
+      "validate": {
+        "validationType": "phone"
+      }
+    },
+    {
+      "key": "organization",
+      "label": "Organization/Company",
+      "type": "textfield"
+    },
+    {
+      "key": "eventDate",
+      "label": "Preferred Event Date",
+      "type": "datetime",
+      "subtype": "date",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "eventType",
+      "label": "Event Type",
+      "type": "select",
+      "values": [
+        {
+          "label": "Conference",
+          "value": "conference"
+        },
+        {
+          "label": "Workshop",
+          "value": "workshop"
+        },
+        {
+          "label": "Seminar",
+          "value": "seminar"
+        },
+        {
+          "label": "Networking Event",
+          "value": "networking"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "dietaryRestrictions",
+      "label": "Dietary Restrictions",
+      "type": "checklist",
+      "values": [
+        {
+          "label": "Vegetarian",
+          "value": "vegetarian"
+        },
+        {
+          "label": "Vegan",
+          "value": "vegan"
+        },
+        {
+          "label": "Gluten-Free",
+          "value": "gluten-free"
+        },
+        {
+          "label": "Nut Allergy",
+          "value": "nut-allergy"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "key": "specialAccommodations",
+      "label": "Special Accommodations",
+      "type": "textarea",
+      "description": "Please let us know if you require any special accommodations"
+    },
+    {
+      "key": "newsletter",
+      "label": "Subscribe to event updates and newsletters",
+      "type": "checkbox"
+    },
+    {
+      "key": "submit",
+      "label": "Register for Event",
+      "type": "button"
+    }
+  ]
+}
+

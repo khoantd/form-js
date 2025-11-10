@@ -1,4 +1,5 @@
 import { Injector } from 'didi';
+import { Theme } from '@bpmn-io/form-js-viewer/dist/types/types';
 
 export type Module = any;
 export type Schema = any;
@@ -16,7 +17,9 @@ export interface FormEditorOptions {
   };
   injector?: Injector;
   modules?: Module[];
+  plugins?: Array<any>;
   properties?: FormEditorProperties;
+  theme?: Theme | string;
   [x: string]: any;
 }
 

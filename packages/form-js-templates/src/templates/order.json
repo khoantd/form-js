@@ -1,0 +1,116 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "text": "# Order Form\n\nPlace your order using this form."
+    },
+    {
+      "key": "customerName",
+      "label": "Customer Name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "email",
+      "label": "Email Address",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "validationType": "email"
+      }
+    },
+    {
+      "key": "phone",
+      "label": "Phone Number",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "validationType": "phone"
+      }
+    },
+    {
+      "key": "shippingAddress",
+      "label": "Shipping Address",
+      "type": "textarea",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "product",
+      "label": "Product",
+      "type": "select",
+      "values": [
+        {
+          "label": "Product A",
+          "value": "product-a"
+        },
+        {
+          "label": "Product B",
+          "value": "product-b"
+        },
+        {
+          "label": "Product C",
+          "value": "product-c"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "quantity",
+      "label": "Quantity",
+      "type": "number",
+      "validate": {
+        "required": true,
+        "min": 1
+      }
+    },
+    {
+      "key": "shippingMethod",
+      "label": "Shipping Method",
+      "type": "radio",
+      "values": [
+        {
+          "label": "Standard Shipping (5-7 business days)",
+          "value": "standard"
+        },
+        {
+          "label": "Express Shipping (2-3 business days)",
+          "value": "express"
+        },
+        {
+          "label": "Overnight Shipping (1 business day)",
+          "value": "overnight"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "specialInstructions",
+      "label": "Special Instructions",
+      "type": "textarea",
+      "description": "Any special delivery instructions or notes"
+    },
+    {
+      "key": "terms",
+      "label": "I agree to the terms and conditions",
+      "type": "checkbox",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "submit",
+      "label": "Place Order",
+      "type": "button"
+    }
+  ]
+}
+

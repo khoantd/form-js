@@ -20,6 +20,7 @@ export class AddFormFieldHandler {
 
     const targetPath = [...targetFormField._path, 'components'];
 
+    // Set parent relationship (registry will maintain object graph)
     formField._parent = targetFormField.id;
 
     // (1) Add new form field
@@ -28,11 +29,10 @@ export class AddFormFieldHandler {
     // (2) Update internal paths of new form field and its siblings (and their children)
     get(schema, targetPath).forEach((formField, index) => updatePath(this._formFieldRegistry, formField, index));
 
-    // (3) Add new form field to form field registry
+    // (3) Add new form field to form field registry (establishes parent-child relationship)
     this._formFieldRegistry.add(formField);
 
-    // TODO: Create updater/change support that automatically updates paths and schema on command execution
-    this._formEditor._setState({ schema });
+    // Schema state is automatically updated by SchemaUpdater
   }
 
   revert(context) {
@@ -51,8 +51,7 @@ export class AddFormFieldHandler {
     // (3) Remove new form field from form field registry
     this._formFieldRegistry.remove(formField);
 
-    // TODO: Create updater/change support that automatically updates paths and schema on command execution
-    this._formEditor._setState({ schema });
+    // Schema state is automatically updated by SchemaUpdater
   }
 }
 

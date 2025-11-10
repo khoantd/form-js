@@ -60,6 +60,7 @@ export default [
       '@carbon/grid',
       'feelers',
       'dompurify',
+      'jspdf',
     ],
     plugins: pgl([
       copy({
@@ -71,13 +72,6 @@ export default [
     ]),
 
     onwarn(warning, warn) {
-      // TODO(@barmac): remove once https://github.com/moment/luxon/issues/193 is resolved
-      if (warning.code === 'CIRCULAR_DEPENDENCY') {
-        if (warning.message.includes('luxon')) {
-          return;
-        }
-      }
-
       if (warning.code === 'THIS_IS_UNDEFINED') {
         if (warning.id.includes('flatpickr')) {
           return;

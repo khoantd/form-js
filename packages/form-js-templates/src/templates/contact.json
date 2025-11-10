@@ -1,0 +1,62 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "text": "# Contact Us\n\nPlease fill out the form below and we'll get back to you as soon as possible."
+    },
+    {
+      "key": "name",
+      "label": "Full Name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "email",
+      "label": "Email Address",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "validationType": "email"
+      }
+    },
+    {
+      "key": "phone",
+      "label": "Phone Number",
+      "type": "textfield",
+      "validate": {
+        "validationType": "phone"
+      }
+    },
+    {
+      "key": "subject",
+      "label": "Subject",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "message",
+      "label": "Message",
+      "type": "textarea",
+      "validate": {
+        "required": true,
+        "minLength": 10
+      }
+    },
+    {
+      "key": "newsletter",
+      "label": "Subscribe to our newsletter",
+      "type": "checkbox"
+    },
+    {
+      "key": "submit",
+      "label": "Send Message",
+      "type": "button"
+    }
+  ]
+}
+

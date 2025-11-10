@@ -104,7 +104,11 @@ export class Dragging {
 
       // (3) check  for path collisions
       const targetParentFormField = this._formFieldRegistry.get(targetParentId);
-      const currentParentFormField = this._formFieldRegistry.get(formField._parent);
+      const currentParentFormField = this._formFieldRegistry.getParent(formField);
+
+      if (!targetParentFormField || !currentParentFormField) {
+        return 'Drop is not a valid target';
+      }
 
       if (targetParentFormField !== currentParentFormField) {
         const targetParentPath = this._pathRegistry.getValuePath(targetParentFormField);

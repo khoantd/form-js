@@ -16,6 +16,7 @@ import { DeleteIcon, DraggableIcon } from './icons';
 import { ModularSection } from './ModularSection';
 import { Palette, collectPaletteEntries, getPaletteIcon } from '../../features/palette/components/Palette';
 import { InjectedRendersRoot } from '../../features/render-injection/components/InjectedRendersRoot';
+import { PreviewButton, PreviewModal } from '../../features/preview-mode/components';
 
 import { SlotFillRoot } from '../../features/render-injection/slot-fill';
 
@@ -121,9 +122,10 @@ function Element(props) {
     }
   }, [selection, field]);
 
+  // Use proper DOM delegation - handle clicks on the form container
   const onClick = useCallback(
     (event) => {
-      // TODO(nikku): refactor this to use proper DOM delegation
+      // Find the closest form field element
       const fieldEl = event.target.closest('[data-id]');
 
       if (!fieldEl) {
@@ -132,7 +134,8 @@ function Element(props) {
 
       const id = fieldEl.dataset.id;
 
-      if (id === field.id) {
+      // Only handle clicks on the field itself, not on nested elements
+      if (id === field.id && event.target.closest('[data-id]') === fieldEl) {
         selection.toggle(field);
       }
     },
@@ -168,7 +171,11 @@ function Element(props) {
   const onRemove = (event) => {
     event.stopPropagation();
 
-    const parentField = formFieldRegistry.get(field._parent);
+    const parentField = formFieldRegistry.getParent(field);
+
+    if (!parentField) {
+      return;
+    }
 
     const index = getFormFieldIndex(parentField, field);
 
@@ -316,7 +323,8 @@ export function FormEditor() {
     injector = useService('injector'),
     selection = useService('selection'),
     propertiesPanel = useService('propertiesPanel'),
-    propertiesPanelConfig = useService('config.propertiesPanel');
+    propertiesPanelConfig = useService('config.propertiesPanel'),
+    previewMode = useService('previewMode');
 
   const { schema, properties } = formEditor._getState();
 
@@ -329,6 +337,8 @@ export function FormEditor() {
   const [, setSelection] = useState(schema);
 
   const [hasInitialized, setHasInitialized] = useState(false);
+
+  const [isPreviewMode, setIsPreviewMode] = useState(previewMode.isActive());
 
   useEffect(() => {
     function handleSelectionChanged(event) {
@@ -345,6 +355,18 @@ export function FormEditor() {
   useEffect(() => {
     setSelection(selection.get() || schema);
   }, [selection, schema]);
+
+  useEffect(() => {
+    function handlePreviewModeChanged(event) {
+      setIsPreviewMode(event.active);
+    }
+
+    eventBus.on('previewMode.changed', handlePreviewModeChanged);
+
+    return () => {
+      eventBus.off('previewMode.changed', handlePreviewModeChanged);
+    };
+  }, [eventBus]);
 
   const [drake, setDrake] = useState(null);
 
@@ -381,12 +403,20 @@ export function FormEditor() {
       setDrake(drake);
     };
 
-    const onDragStart = () => {
+    const onDragStart = (event) => {
       setCursor('grabbing');
+      // Preserve cursor style on the dragged element to mitigate dragula cursor issues
+      if (event && event.element) {
+        event.element.style.cursor = 'grabbing';
+      }
     };
 
-    const onDragEnd = () => {
+    const onDragEnd = (event) => {
       unsetCursor();
+      // Reset cursor style on the dragged element
+      if (event && event.element) {
+        event.element.style.cursor = '';
+      }
     };
 
     eventBus.on('attach', onAttach);
@@ -472,13 +502,20 @@ export function FormEditor() {
   }, [propertiesPanelRef, propertiesPanel, hasDefaultPropertiesPanel]);
 
   return (
-    <div class="fjs-form-editor">
+    <div class={`fjs-form-editor ${isPreviewMode ? 'fjs-form-editor-preview-mode' : ''}`}>
       <SlotFillRoot>
         <DragAndDropContext.Provider value={dragAndDropContext}>
-          <ModularSection rootClass="fjs-palette-container" section="palette">
-            <Palette />
-          </ModularSection>
+          {!isPreviewMode && (
+            <ModularSection rootClass="fjs-palette-container" section="palette">
+              <Palette />
+            </ModularSection>
+          )}
           <div ref={formContainerRef} class="fjs-form-container">
+            {!isPreviewMode && (
+              <div class="fjs-preview-button-container">
+                <PreviewButton />
+              </div>
+            )}
             <FormContext.Provider value={formContext}>
               <FormRenderContext.Provider
                 // @ts-ignore
@@ -489,11 +526,14 @@ export function FormEditor() {
           </div>
           <CreatePreview />
         </DragAndDropContext.Provider>
-        {hasDefaultPropertiesPanel && <div class="fjs-editor-properties-container" ref={propertiesPanelRef} />}
+        {hasDefaultPropertiesPanel && !isPreviewMode && (
+          <div class="fjs-editor-properties-container" ref={propertiesPanelRef} />
+        )}
         <ModularSection rootClass="fjs-render-injector-container" section="renderInjector">
           <InjectedRendersRoot />
         </ModularSection>
       </SlotFillRoot>
+      <PreviewModal />
     </div>
   );
 }
@@ -545,8 +585,9 @@ function CreatePreview(props) {
           clone.classList.add('cds--col');
         }
 
-        // todo(pinussilvestrus): dragula, how to mitigate cursor position
+        // Mitigate dragula cursor position issues by preserving cursor style
         // https://github.com/bevacqua/dragula/issues/285
+        clone.style.cursor = 'grabbing';
         render(<FieldDragPreview label={label} Icon={Icon} />, clone);
       } else {
         // (2) row preview

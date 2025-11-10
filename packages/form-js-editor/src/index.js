@@ -8,6 +8,15 @@ export { useDebounce, usePrevious, useService } from './render/hooks';
 
 export { useService as usePropertiesPanelService, useVariables } from './features/properties-panel/hooks';
 
+export { Plugin, PluginRegistry, PluginIntegration, PluginModule } from './features/plugins';
+
+export {
+  SimplePalettePlugin,
+  CustomPropertiesPlugin,
+  EventHookPlugin,
+  CustomCommandPlugin,
+} from './features/plugins/examples';
+
 /**
  * @typedef { import('./types').CreateFormEditorOptions } CreateFormEditorOptions
  */
