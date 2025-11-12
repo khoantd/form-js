@@ -8,7 +8,23 @@ import { useService } from './usePropertiesPanelService';
  */
 export function useVariables() {
   const form = useService('formEditor');
-  const schema = form.getSchema();
-
-  return getSchemaVariables(schema);
+  
+  // Guard against undefined form editor
+  if (!form || typeof form.getSchema !== 'function') {
+    return [];
+  }
+  
+  try {
+    const schema = form.getSchema();
+    
+    // Guard against undefined/null schema
+    if (!schema) {
+      return [];
+    }
+    
+    return getSchemaVariables(schema);
+  } catch (error) {
+    console.error('Error getting schema variables:', error);
+    return [];
+  }
 }

@@ -65,7 +65,7 @@ export class Form {
      */
     this._container = createFormContainer();
 
-    const { container, injector = this._createInjector(options, this._container), properties = {}, theme } = options;
+    const { container, injector = this._createInjector(options, this._container), properties = {}, theme, analytics: analyticsOptions } = options;
 
     /**
      * @private
@@ -93,6 +93,22 @@ export class Form {
           const type = (formField && formField.config && formField.config.type) || null;
           if (type) {
             formFields.register(type, formField);
+          }
+        });
+      }
+    }
+
+    // Register any custom validators provided via options
+    if (options.customValidators && typeof options.customValidators === 'object') {
+      const validationRegistry = this.get('validationRegistry', false);
+      if (validationRegistry) {
+        Object.entries(options.customValidators).forEach(([name, validator]) => {
+          if (typeof validator === 'function') {
+            try {
+              validationRegistry.register(name, validator);
+            } catch (error) {
+              console.warn(`Failed to register custom validator "${name}":`, error);
+            }
           }
         });
       }
@@ -152,6 +168,29 @@ export class Form {
     }
 
     formFields.register(type, impl);
+  }
+
+  /**
+   * Register a custom validator at runtime.
+   *
+   * @param {string} name - Validator name
+   * @param {Function} validator - Validation function
+   */
+  registerValidator(name, validator) {
+    const validationRegistry = this.get('validationRegistry', false);
+    if (!validationRegistry) {
+      throw new Error('validationRegistry service not available');
+    }
+
+    if (typeof name !== 'string' || !name) {
+      throw new Error('Validator name must be a non-empty string');
+    }
+
+    if (typeof validator !== 'function') {
+      throw new Error('Validator must be a function');
+    }
+
+    validationRegistry.register(name, validator);
   }
 
   /**
@@ -247,7 +286,7 @@ export class Form {
   }
 
   /**
-   * @returns {Errors}
+   * @returns {Errors|Promise<Errors>}
    */
   validate() {
     const formFieldRegistry = this.get('formFieldRegistry'),
@@ -256,6 +295,7 @@ export class Form {
 
     const { data } = this._getState();
     const errors = {};
+    const promises = [];
 
     const getErrorPath = (id, indexes) => [id, ...Object.values(indexes || {})];
 
@@ -273,10 +313,27 @@ export class Form {
       const value = get(data, valuePath);
       const fieldErrors = validator.validateFieldInstance(fieldInstance, value);
 
-      if (fieldErrors.length) {
+      // Handle async validation
+      if (fieldErrors && typeof fieldErrors.then === 'function') {
+        promises.push(
+          fieldErrors.then((asyncFieldErrors) => {
+            if (asyncFieldErrors && asyncFieldErrors.length) {
+              set(errors, getErrorPath(field.id, indexes), asyncFieldErrors);
+            }
+          }),
+        );
+      } else if (fieldErrors && fieldErrors.length) {
         set(errors, getErrorPath(field.id, indexes), fieldErrors);
       }
     });
+
+    // If there are async validators, wait for them
+    if (promises.length > 0) {
+      return Promise.all(promises).then(() => {
+        this._setState({ errors });
+        return errors;
+      });
+    }
 
     this._setState({ errors });
 
@@ -455,6 +512,154 @@ export class Form {
   }
 
   /**
+   * Get analytics data.
+   *
+   * @returns {import('./core/Analytics').AnalyticsData} Analytics data
+   */
+  getAnalytics() {
+    const analytics = this.get('analytics', false);
+    if (!analytics) {
+      throw new Error('Analytics service not available');
+    }
+    return analytics.getData();
+  }
+
+  /**
+   * Track field focus event.
+   *
+   * @param {string} fieldId - Field identifier
+   */
+  trackFieldFocus(fieldId) {
+    const analytics = this.get('analytics', false);
+    if (analytics) {
+      analytics.trackFocus(fieldId);
+    }
+  }
+
+  /**
+   * Track field blur event.
+   *
+   * @param {string} fieldId - Field identifier
+   */
+  trackFieldBlur(fieldId) {
+    const analytics = this.get('analytics', false);
+    if (analytics) {
+      analytics.trackBlur(fieldId);
+    }
+  }
+
+  /**
+   * Reset analytics data.
+   */
+  resetAnalytics() {
+    const analytics = this.get('analytics', false);
+    if (analytics) {
+      analytics.reset();
+    }
+  }
+
+  /**
+   * Enable analytics tracking.
+   */
+  enableAnalytics() {
+    const analytics = this.get('analytics', false);
+    if (analytics) {
+      analytics.enable();
+    }
+  }
+
+  /**
+   * Disable analytics tracking.
+   */
+  disableAnalytics() {
+    const analytics = this.get('analytics', false);
+    if (analytics) {
+      analytics.disable();
+    }
+  }
+
+  /**
+   * Get current locale.
+   *
+   * @returns {string}
+   */
+  getLocale() {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    return i18n.getLocale();
+  }
+
+  /**
+   * Set current locale at runtime.
+   *
+   * @param {string} locale - Locale code (e.g., 'en', 'de', 'fr')
+   */
+  setLocale(locale) {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    i18n.setLocale(locale);
+    this._emit('locale.changed', { locale });
+  }
+
+  /**
+   * Get fallback locale.
+   *
+   * @returns {string}
+   */
+  getFallbackLocale() {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    return i18n.getFallbackLocale();
+  }
+
+  /**
+   * Set fallback locale.
+   *
+   * @param {string} locale - Locale code
+   */
+  setFallbackLocale(locale) {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    i18n.setFallbackLocale(locale);
+  }
+
+  /**
+   * Add or update translations for a locale.
+   *
+   * @param {string} locale - Locale code
+   * @param {Record<string, string>} translations - Translation dictionary
+   */
+  addTranslations(locale, translations) {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    i18n.addTranslations(locale, translations);
+  }
+
+  /**
+   * Get all translations for a locale.
+   *
+   * @param {string} [locale] - Locale code, defaults to current locale
+   * @returns {Record<string, string>}
+   */
+  getTranslations(locale) {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    return i18n.getTranslations(locale);
+  }
+
+  /**
    * @private
    *
    * @param {FormOptions} options
@@ -481,6 +686,7 @@ export class Form {
       renderer: {
         container,
       },
+      analytics: options.analytics || {},
     };
 
     return createInjector([

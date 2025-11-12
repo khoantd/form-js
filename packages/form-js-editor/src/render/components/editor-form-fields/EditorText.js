@@ -11,13 +11,18 @@ export function EditorText(props) {
 
   const templating = useService('templating');
   const expressionLanguage = useService('expressionLanguage');
+  const i18n = useService('i18n', false);
+
+  const emptyText = i18n ? i18n.t('editor.text.empty') : 'Text view is empty';
+  const expressionText = i18n ? i18n.t('editor.text.expression') : 'Text view is populated by an expression';
+  const templatedText = i18n ? i18n.t('editor.text.templated') : 'Text view is templated';
 
   if (!text || !text.trim()) {
     return (
       <div class={editorFormFieldClasses(type)}>
         <div class="fjs-form-field-placeholder">
           <Icon viewBox="0 0 54 54" />
-          Text view is empty
+          {emptyText}
         </div>
       </div>
     );
@@ -28,7 +33,7 @@ export function EditorText(props) {
       <div class={editorFormFieldClasses(type)}>
         <div class="fjs-form-field-placeholder">
           <Icon viewBox="0 0 54 54" />
-          Text view is populated by an expression
+          {expressionText}
         </div>
       </div>
     );
@@ -39,7 +44,7 @@ export function EditorText(props) {
       <div class={editorFormFieldClasses(type)}>
         <div class="fjs-form-field-placeholder">
           <Icon viewBox="0 0 54 54" />
-          Text view is templated
+          {templatedText}
         </div>
       </div>
     );

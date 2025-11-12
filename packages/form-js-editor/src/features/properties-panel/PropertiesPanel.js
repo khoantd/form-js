@@ -2,7 +2,7 @@ import { PropertiesPanel as BasePropertiesPanel } from '@bpmn-io/properties-pane
 
 import { useCallback, useMemo, useState, useLayoutEffect, useRef } from 'preact/hooks';
 
-import { reduce, isArray } from 'min-dash';
+import { reduce, isArray, get } from 'min-dash';
 
 import { FormPropertiesPanelContext } from './context';
 
@@ -25,6 +25,9 @@ export function PropertiesPanel(props) {
     () => selectionModule.get() || formEditor._getState().schema,
   );
 
+  // Track schema version to force recalculation when properties change
+  const [schemaVersion, setSchemaVersion] = useState(0);
+
   // Use ref to track current selection without causing re-renders
   const selectedFormFieldRef = useRef(selectedFormField);
   selectedFormFieldRef.current = selectedFormField;
@@ -32,28 +35,51 @@ export function PropertiesPanel(props) {
   // Only update selected field when selection actually changes
   const handleSelectionChanged = useCallback(
     (event) => {
-      const newSelection = selectionModule.get() || formEditor._getState().schema;
-      setSelectedFormField((prev) => {
-        // Only update if selection actually changed
-        if (prev === newSelection || (prev && newSelection && prev.id === newSelection.id)) {
-          return prev;
+      try {
+        const newSelection = selectionModule.get() || formEditor._getState().schema;
+        
+      // Guard against undefined/null selection
+      if (!newSelection) {
+        const schema = formEditor._getState().schema;
+        if (schema) {
+          setSelectedFormField(schema);
         }
-        return newSelection;
-      });
+        return;
+      }
+        
+        setSelectedFormField((prev) => {
+          // Only update if selection actually changed
+          if (prev === newSelection || (prev && newSelection && prev.id === newSelection.id)) {
+            return prev;
+          }
+          return newSelection;
+        });
+      } catch (error) {
+        // Fallback to schema if selection fails
+        try {
+          const schema = formEditor._getState().schema;
+          if (schema) {
+            setSelectedFormField(schema);
+          }
+        } catch (e) {
+          // Silently handle fallback error
+        }
+      }
     },
     [formEditor, selectionModule],
   );
 
-  // Handle schema changes - only update if the selected field was modified
+  // Handle schema changes - update when the selected field was modified
   const handleSchemaChanged = useCallback(
     (event) => {
-      // Handle case where event might be undefined or not have schema property
-      if (!event || !event.schema) {
+      // Get schema from event or fallback to current state
+      const schema = event?.schema || formEditor._getState().schema;
+      if (!schema) {
         return;
       }
 
-      const { schema } = event;
       const currentField = selectedFormFieldRef.current;
+      
       if (!currentField || !currentField.id) {
         return;
       }
@@ -74,14 +100,23 @@ export function PropertiesPanel(props) {
       };
 
       const updatedField = findFieldInSchema(schema.components, currentField.id);
-      if (updatedField && updatedField !== currentField) {
-        setSelectedFormField(updatedField);
+      
+      if (updatedField) {
+        // Always update to force re-render, even if reference is the same
+        // This is necessary because fields are mutated in place
+        setSelectedFormField((prev) => {
+          // Force update by returning the found field
+          // This ensures groups are recalculated when properties change
+          return updatedField;
+        });
+        // Increment schema version to force groups recalculation
+        setSchemaVersion((prev) => prev + 1);
         eventBus.fire('propertiesPanel.updated', {
           formField: updatedField,
         });
       }
     },
-    [eventBus],
+    [eventBus, formEditor],
   );
 
   useLayoutEffect(() => {
@@ -104,27 +139,83 @@ export function PropertiesPanel(props) {
 
   const onBlur = () => eventBus.fire('propertiesPanel.focusout');
 
-  const editField = useCallback((formField, key, value) => modeling.editFormField(formField, key, value), [modeling]);
+  const editField = useCallback((formField, key, value) => {
+    try {
+      return modeling.editFormField(formField, key, value);
+    } catch (error) {
+      throw error;
+    }
+  }, [modeling]);
+
+  // Guard against undefined selectedFormField
+  const safeSelectedFormField = selectedFormField || formEditor._getState().schema;
+
+  // Create a key based on field properties to force recalculation when properties change
+  // This is necessary because fields are mutated in place, so reference equality doesn't detect changes
+  // We use schemaVersion to force recalculation when schema changes
+  const fieldPropertiesKey = useMemo(() => {
+    if (!safeSelectedFormField || !safeSelectedFormField.id) {
+      return '';
+    }
+    try {
+      const properties = get(safeSelectedFormField, ['properties'], {});
+      const key = `${schemaVersion}:${JSON.stringify(properties)}`;
+      // Include schemaVersion to force recalculation
+      return key;
+    } catch (e) {
+      // Fallback if JSON.stringify fails (e.g., circular references)
+      const fallbackKey = `${schemaVersion}:${Date.now()}`;
+      return fallbackKey;
+    }
+  }, [safeSelectedFormField, schemaVersion]);
 
   // retrieve groups for selected form field
-  const providers = getProviders(selectedFormField);
+  const providers = getProviders(safeSelectedFormField);
 
   const groups = useMemo(() => {
-    return reduce(
-      providers,
-      function (groups, provider) {
-        // do not collect groups for multi element state
-        if (isArray(selectedFormField)) {
-          return [];
-        }
+    // Guard against undefined/null selectedFormField
+    if (!safeSelectedFormField) {
+      return [];
+    }
 
-        const updater = provider.getGroups(selectedFormField, editField);
+    try {
+      const result = reduce(
+        providers,
+        function (groups, provider) {
+          // do not collect groups for multi element state
+          if (isArray(safeSelectedFormField)) {
+            return [];
+          }
 
-        return updater(groups);
-      },
-      [],
-    );
-  }, [providers, selectedFormField, editField]);
+          // Guard against undefined provider or getGroups method
+          if (!provider || typeof provider.getGroups !== 'function') {
+            return groups;
+          }
+
+          try {
+            const updater = provider.getGroups(safeSelectedFormField, editField);
+            
+            // Guard against undefined updater
+            if (typeof updater !== 'function') {
+              return groups;
+            }
+
+            const updatedGroups = updater(groups);
+            return updatedGroups;
+          } catch (error) {
+            return groups;
+          }
+        },
+        [],
+      );
+      
+      return result.filter((group) => {
+        return group.items || (group.entries && group.entries.length);
+      });
+    } catch (error) {
+      return [];
+    }
+  }, [providers, safeSelectedFormField, editField, fieldPropertiesKey]);
 
   const formFields = getService('formFields');
 
@@ -137,15 +228,36 @@ export function PropertiesPanel(props) {
     [formFields, propertiesPanelConfig],
   );
 
+  // Guard against undefined selectedFormField before rendering
+  if (!safeSelectedFormField) {
+    return (
+      <div
+        class="fjs-properties-panel"
+        onFocusCapture={onFocus}
+        onBlurCapture={onBlur}>
+        <FormPropertiesPanelContext.Provider value={propertiesPanelContext}>
+          <BasePropertiesPanel
+            element={null}
+            eventBus={eventBus}
+            groups={[]}
+            headerProvider={PropertiesPanelHeaderProvider}
+            placeholderProvider={PropertiesPanelPlaceholderProvider}
+            feelPopupContainer={feelPopupContainer}
+          />
+        </FormPropertiesPanelContext.Provider>
+      </div>
+    );
+  }
+
   return (
     <div
       class="fjs-properties-panel"
-      data-field={selectedFormField && selectedFormField.id}
+      data-field={safeSelectedFormField && safeSelectedFormField.id}
       onFocusCapture={onFocus}
       onBlurCapture={onBlur}>
       <FormPropertiesPanelContext.Provider value={propertiesPanelContext}>
         <BasePropertiesPanel
-          element={selectedFormField}
+          element={safeSelectedFormField}
           eventBus={eventBus}
           groups={groups}
           headerProvider={PropertiesPanelHeaderProvider}

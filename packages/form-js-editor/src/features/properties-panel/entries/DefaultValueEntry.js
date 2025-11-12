@@ -20,7 +20,7 @@ import { useCallback } from 'preact/hooks';
 export const EMPTY_OPTION = '';
 
 export function DefaultValueEntry(props) {
-  const { editField, field } = props;
+  const { editField, field, getService } = props;
 
   const { type } = field;
 
@@ -63,6 +63,7 @@ export function DefaultValueEntry(props) {
     component: DefaultValueSingleSelect,
     isEdited: isSelectEntryEdited,
     isDefaultVisible: isDefaultVisible((field) => field.type === 'radio' || field.type === 'select'),
+    getService,
   });
 
   entries.push({
@@ -189,11 +190,27 @@ function DefaultValueNumber(props) {
 }
 
 function DefaultValueSingleSelect(props) {
-  const { editField, field, id, label } = props;
+  const { editField, field, id, label, getService } = props;
 
   const { defaultValue = EMPTY_OPTION, values = [] } = field;
+  const i18n = getService ? getService('i18n', false) : null;
 
   const path = ['defaultValue'];
+
+  // Helper to localize option labels
+  const localizeOptionLabel = (optionLabel) => {
+    if (!optionLabel) return '';
+    if (typeof optionLabel === 'string') return optionLabel;
+    if (typeof optionLabel === 'object' && i18n) {
+      return i18n.localize(optionLabel);
+    }
+    // Fallback for object without i18n
+    if (typeof optionLabel === 'object') {
+      const locales = Object.keys(optionLabel);
+      return locales.length > 0 ? optionLabel[locales[0]] : '';
+    }
+    return String(optionLabel);
+  };
 
   const getOptions = () => {
     return [
@@ -201,7 +218,14 @@ function DefaultValueSingleSelect(props) {
         label: '<none>',
         value: EMPTY_OPTION,
       },
-      ...values,
+      ...values.map((option) => {
+        const optionValue = typeof option === 'string' ? option : option.value;
+        const optionLabel = typeof option === 'string' ? option : option.label || option.value;
+        return {
+          value: optionValue,
+          label: localizeOptionLabel(optionLabel),
+        };
+      }),
     ];
   };
 

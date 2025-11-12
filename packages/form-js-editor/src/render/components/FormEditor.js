@@ -77,12 +77,17 @@ function Empty(props) {
   return null;
 }
 
+function Hidden(props) {
+  return null;
+}
+
 function Element(props) {
   const eventBus = useService('eventBus'),
     formFieldRegistry = useService('formFieldRegistry'),
     formFields = useService('formFields'),
     modeling = useService('modeling'),
-    selection = useService('selection');
+    selection = useService('selection'),
+    i18n = useService('i18n', false);
 
   const { hoverInfo } = useContext(FormRenderContext);
 
@@ -227,7 +232,7 @@ function Element(props) {
         {selection.isSelected(field) && field.type !== 'default' ? (
           <button
             type="button"
-            title={getRemoveButtonTitle(field, formFields)}
+            title={getRemoveButtonTitle(field, formFields, i18n)}
             class="fjs-context-pad-item"
             onClick={onRemove}>
             <DeleteIcon />
@@ -481,6 +486,7 @@ export function FormEditor() {
       Column,
       Element,
       Empty,
+      Hidden,
       Row,
       hoverInfo: {},
     }),
@@ -650,12 +656,14 @@ function defaultPropertiesPanel(propertiesPanelConfig) {
   return !(propertiesPanelConfig && propertiesPanelConfig.parent);
 }
 
-function getRemoveButtonTitle(formField, formFields) {
+function getRemoveButtonTitle(formField, formFields, i18n) {
+  const removeText = i18n ? i18n.t('editor.properties.remove') : 'Remove';
   const entry = findPaletteEntry(formField.type, formFields);
 
   if (!entry) {
-    return 'Remove form field';
+    return i18n ? i18n.t('editor.properties.remove') + ' form field' : 'Remove form field';
   }
 
-  return `Remove ${entry.label}`;
+  const localizedLabel = i18n ? i18n.localize(entry.label) : entry.label;
+  return `${removeText} ${localizedLabel}`;
 }

@@ -448,6 +448,87 @@ export class FormEditor {
   }
 
   /**
+   * Get current locale.
+   *
+   * @returns {string}
+   */
+  getLocale() {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    return i18n.getLocale();
+  }
+
+  /**
+   * Set current locale at runtime.
+   *
+   * @param {string} locale - Locale code (e.g., 'en', 'de', 'fr')
+   */
+  setLocale(locale) {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    i18n.setLocale(locale);
+    this._emit('locale.changed', { locale });
+  }
+
+  /**
+   * Get fallback locale.
+   *
+   * @returns {string}
+   */
+  getFallbackLocale() {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    return i18n.getFallbackLocale();
+  }
+
+  /**
+   * Set fallback locale.
+   *
+   * @param {string} locale - Locale code
+   */
+  setFallbackLocale(locale) {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    i18n.setFallbackLocale(locale);
+  }
+
+  /**
+   * Add or update translations for a locale.
+   *
+   * @param {string} locale - Locale code
+   * @param {Record<string, string>} translations - Translation dictionary
+   */
+  addTranslations(locale, translations) {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    i18n.addTranslations(locale, translations);
+  }
+
+  /**
+   * Get all translations for a locale.
+   *
+   * @param {string} [locale] - Locale code, defaults to current locale
+   * @returns {Record<string, string>}
+   */
+  getTranslations(locale) {
+    const i18n = this.get('i18n', false);
+    if (!i18n) {
+      throw new Error('I18n service not available');
+    }
+    return i18n.getTranslations(locale);
+  }
+
+  /**
    * @internal
    *
    * @param {FormEditorOptions} options
@@ -613,17 +694,92 @@ export function exportSchema(schema, exporter, schemaVersion) {
       }
     : {};
 
-  const cleanedSchema = clone(schema, (name, value) => {
+  // Use a replacer that filters out internal properties and handles potential circular references
+  const replacer = (name, value) => {
+    // Filter out internal properties that may cause cyclic references
     if (['_parent', '_path'].includes(name)) {
       return undefined;
     }
 
+    // If value is an object, check if it's a form field component to avoid cycles
+    // This helps prevent issues with object references that might create cycles
+    if (value && typeof value === 'object' && !Array.isArray(value) && value !== null) {
+      // For objects that might be form fields, ensure we don't create cycles
+      // by checking if they have internal properties that should be filtered
+      if ('_parent' in value || '_path' in value) {
+        // This shouldn't happen if the replacer is working correctly,
+        // but we'll handle it defensively
+        const cleaned = { ...value };
+        delete cleaned._parent;
+        delete cleaned._path;
+        return cleaned;
+      }
+    }
+
     return value;
-  });
+  };
+
+  let cleanedSchema;
+  try {
+    cleanedSchema = clone(schema, replacer);
+  } catch (error) {
+    // If clone fails due to circular reference, try a more defensive approach
+    // Check for various error messages that indicate cyclic references
+    const errorMessage = error?.message || String(error);
+    if (errorMessage.includes('cyclic') || errorMessage.includes('circular')) {
+      // Fallback: manually clean the schema to remove internal properties
+      cleanedSchema = cleanSchemaRecursively(schema);
+    } else {
+      throw error;
+    }
+  }
 
   return {
     ...cleanedSchema,
     ...exportDetails,
     schemaVersion,
   };
+}
+
+/**
+ * Recursively clean schema by removing internal properties.
+ * Used as fallback when JSON.stringify fails due to circular references.
+ *
+ * @param {any} obj - The object to clean
+ * @param {WeakSet} visited - Set of visited objects to prevent cycles
+ * @returns {any} - The cleaned object
+ */
+function cleanSchemaRecursively(obj, visited = new WeakSet()) {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  // Handle arrays
+  if (Array.isArray(obj)) {
+    return obj.map((item) => cleanSchemaRecursively(item, visited));
+  }
+
+  // Prevent cycles - if we've seen this object before, it's a circular reference
+  if (visited.has(obj)) {
+    // Return a placeholder object to break the cycle
+    // This should not happen in a valid schema tree structure
+    return {};
+  }
+
+  visited.add(obj);
+
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip internal properties that may cause cycles
+    if (['_parent', '_path'].includes(key)) {
+      continue;
+    }
+
+    // Recursively clean nested objects
+    cleaned[key] = cleanSchemaRecursively(value, visited);
+  }
+
+  // Note: We don't delete from WeakSet as it's automatically managed
+  // and we want to detect cycles across the entire traversal
+  return cleaned;
 }

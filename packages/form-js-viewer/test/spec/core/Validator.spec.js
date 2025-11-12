@@ -1,6 +1,9 @@
+import { expect } from 'chai';
 import EventBus from 'diagram-js/lib/core/EventBus';
 import { Validator } from '../../../src/core/Validator';
+import { ValidationRegistry } from '../../../src/core/ValidationRegistry';
 import { FeelExpressionLanguage } from '../../../src/features/expressionLanguage';
+import { I18n } from '../../../src/core/I18n';
 
 describe('Validator', function () {
   const validator = createValidator();
@@ -714,11 +717,268 @@ describe('Validator', function () {
       expect(errors[0]).to.equal('Field must have maximum length of 5.');
     });
   });
+
+  describe('custom validators', function () {
+    it('should run custom validators', function () {
+      // given
+      const validator = createValidator();
+      const validationRegistry = validator._validationRegistry;
+      validationRegistry.register('customMin', (context) => {
+        if (context.value && context.value.length < 5) {
+          return 'Value must be at least 5 characters';
+        }
+        return null;
+      });
+
+      const field = {
+        id: 'test',
+        type: 'textfield',
+        validate: {
+          customValidators: ['customMin'],
+        },
+      };
+
+      const fieldInstance = {
+        id: 'test',
+        expressionContextInfo: {},
+      };
+
+      // when
+      const errors = validator.validateFieldInstance(fieldInstance, 'foo');
+
+      // then
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.equal('Value must be at least 5 characters');
+    });
+
+    it('should run multiple custom validators', function () {
+      // given
+      const validator = createValidator();
+      const validationRegistry = validator._validationRegistry;
+      validationRegistry.register('minLength', (context) => {
+        if (context.value && context.value.length < 5) {
+          return 'Too short';
+        }
+        return null;
+      });
+      validationRegistry.register('noSpaces', (context) => {
+        if (context.value && context.value.includes(' ')) {
+          return 'No spaces allowed';
+        }
+        return null;
+      });
+
+      const field = {
+        id: 'test',
+        type: 'textfield',
+        validate: {
+          customValidators: ['minLength', 'noSpaces'],
+        },
+      };
+
+      const fieldInstance = {
+        id: 'test',
+        expressionContextInfo: {},
+      };
+
+      // when
+      const errors = validator.validateFieldInstance(fieldInstance, 'foo bar');
+
+      // then
+      expect(errors).to.have.length(2);
+      expect(errors).to.include('Too short');
+      expect(errors).to.include('No spaces allowed');
+    });
+
+    it('should support async custom validators', async function () {
+      // given
+      const validator = createValidator();
+      const validationRegistry = validator._validationRegistry;
+      validationRegistry.register('asyncCheck', async (context) => {
+        // Simulate async validation (e.g., API call)
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        if (context.value === 'invalid') {
+          return 'Value is invalid';
+        }
+        return null;
+      });
+
+      const field = {
+        id: 'test',
+        type: 'textfield',
+        validate: {
+          customValidators: ['asyncCheck'],
+        },
+      };
+
+      const fieldInstance = {
+        id: 'test',
+        expressionContextInfo: {},
+      };
+
+      // when
+      const errorsPromise = validator.validateFieldInstance(fieldInstance, 'invalid');
+
+      // then
+      expect(errorsPromise).to.be.a('promise');
+      const errors = await errorsPromise;
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.equal('Value is invalid');
+    });
+
+    it('should handle custom validator errors gracefully', function () {
+      // given
+      const validator = createValidator();
+      const validationRegistry = validator._validationRegistry;
+      validationRegistry.register('errorValidator', () => {
+        throw new Error('Validator error');
+      });
+
+      const field = {
+        id: 'test',
+        type: 'textfield',
+        validate: {
+          customValidators: ['errorValidator'],
+        },
+      };
+
+      const fieldInstance = {
+        id: 'test',
+        expressionContextInfo: {},
+      };
+
+      // when
+      const errors = validator.validateFieldInstance(fieldInstance, 'test');
+
+      // then
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.equal('Validation error occurred');
+    });
+
+    it('should support error objects with message and code', function () {
+      // given
+      const validator = createValidator();
+      const validationRegistry = validator._validationRegistry;
+      validationRegistry.register('structuredError', (context) => {
+        if (!context.value) {
+          return {
+            message: 'Custom required message',
+            code: 'custom.required',
+            severity: 'error',
+          };
+        }
+        return null;
+      });
+
+      const field = {
+        id: 'test',
+        type: 'textfield',
+        validate: {
+          customValidators: ['structuredError'],
+        },
+      };
+
+      const fieldInstance = {
+        id: 'test',
+        expressionContextInfo: {},
+      };
+
+      // when
+      const errors = validator.validateFieldInstance(fieldInstance, '');
+
+      // then
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.equal('Custom required message');
+    });
+  });
+
+  describe('custom error messages', function () {
+    it('should use custom required message', function () {
+      // given
+      const validator = createValidator();
+      const field = {
+        validate: {
+          required: true,
+          requiredMessage: 'This field cannot be empty',
+        },
+      };
+
+      // when
+      const errors = validator.validateField(field, '');
+
+      // then
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.equal('This field cannot be empty');
+    });
+
+    it('should use custom min message', function () {
+      // given
+      const validator = createValidator();
+      const field = {
+        validate: {
+          min: 10,
+          minMessage: 'Value must be at least {min}',
+        },
+      };
+
+      // when
+      const errors = validator.validateField(field, 5);
+
+      // then
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.equal('Value must be at least {min}');
+    });
+
+    it('should use custom email message', function () {
+      // given
+      const validator = createValidator();
+      const field = {
+        validate: {
+          validationType: 'email',
+          emailMessage: 'Please enter a valid email address',
+        },
+      };
+
+      // when
+      const errors = validator.validateField(field, 'invalid-email');
+
+      // then
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.equal('Please enter a valid email address');
+    });
+  });
+
+  describe('i18n support', function () {
+    it('should use i18n for error messages when available', function () {
+      // given
+      const i18n = new I18n({
+        locale: 'en',
+        translations: {
+          en: {
+            'validation.required': 'This field is mandatory',
+          },
+        },
+      });
+      const validator = createValidator(i18n);
+      const field = {
+        validate: {
+          required: true,
+        },
+      };
+
+      // when
+      const errors = validator.validateField(field, '');
+
+      // then
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.equal('This field is mandatory');
+    });
+  });
 });
 
 // helpers //////////
 
-function createValidator() {
+function createValidator(i18n = null) {
   const eventBus = new EventBus();
   const expressionLanguage = new FeelExpressionLanguage(eventBus);
 
@@ -738,5 +998,13 @@ function createValidator() {
     },
   };
 
-  return new Validator(expressionLanguage, conditionChecker, form);
+  const formFieldRegistry = {
+    get(id) {
+      return { id, type: 'textfield' };
+    },
+  };
+
+  const validationRegistry = new ValidationRegistry();
+
+  return new Validator(expressionLanguage, conditionChecker, form, formFieldRegistry, validationRegistry, i18n);
 }

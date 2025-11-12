@@ -19,7 +19,19 @@ export class EditorRepeatRenderManager {
     }
 
     const formField = this._formFieldRegistry.get(id);
+    
+    // Guard against undefined formField (e.g., when field import failed)
+    if (!formField || !formField.type) {
+      return false;
+    }
+
     const formFieldDefinition = this._formFields.get(formField.type);
+    
+    // Guard against undefined formFieldDefinition (e.g., when custom type not registered)
+    if (!formFieldDefinition || !formFieldDefinition.config) {
+      return false;
+    }
+
     return formFieldDefinition.config.repeatable && formField.isRepeating;
   }
 

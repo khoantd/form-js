@@ -34,7 +34,20 @@ function Path(props) {
 
   const debounce = useService('debounce');
   const pathRegistry = useService('pathRegistry');
-  const fieldConfig = useService('formFields').get(field.type).config;
+  
+  // Guard against undefined field or missing type
+  if (!field || !field.type) {
+    return null;
+  }
+  
+  const formFieldDefinition = useService('formFields').get(field.type);
+  
+  // Guard against undefined form field definition (e.g., when custom type not registered)
+  if (!formFieldDefinition || !formFieldDefinition.config) {
+    return null;
+  }
+  
+  const fieldConfig = formFieldDefinition.config;
   const isRepeating = fieldConfig.repeatable && field.isRepeating;
 
   const path = ['path'];

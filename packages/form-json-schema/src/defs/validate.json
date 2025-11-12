@@ -44,6 +44,49 @@
       "$id": "/#component/validate/patternErrorMessage",
       "type": "string",
       "description": "The error message to display when the input does not match the regular expression."
+    },
+    "requiredMessage": {
+      "$id": "/#component/validate/requiredMessage",
+      "type": "string",
+      "description": "The error message to display when a required field is empty."
+    },
+    "minMessage": {
+      "$id": "/#component/validate/minMessage",
+      "type": "string",
+      "description": "The error message to display when the value is below the minimum."
+    },
+    "maxMessage": {
+      "$id": "/#component/validate/maxMessage",
+      "type": "string",
+      "description": "The error message to display when the value is above the maximum."
+    },
+    "minLengthMessage": {
+      "$id": "/#component/validate/minLengthMessage",
+      "type": "string",
+      "description": "The error message to display when the value length is below the minimum."
+    },
+    "maxLengthMessage": {
+      "$id": "/#component/validate/maxLengthMessage",
+      "type": "string",
+      "description": "The error message to display when the value length is above the maximum."
+    },
+    "emailMessage": {
+      "$id": "/#component/validate/emailMessage",
+      "type": "string",
+      "description": "The error message to display when the email validation fails."
+    },
+    "phoneMessage": {
+      "$id": "/#component/validate/phoneMessage",
+      "type": "string",
+      "description": "The error message to display when the phone validation fails."
+    },
+    "customValidators": {
+      "$id": "/#component/validate/customValidators",
+      "type": ["string", "array"],
+      "description": "Custom validator names to run. Can be a single validator name or an array of validator names.",
+      "items": {
+        "type": "string"
+      }
     }
   }
 }

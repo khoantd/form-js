@@ -86,18 +86,52 @@ This file tracks planned features, improvements, and technical debt for the form
 ## Future Enhancements
 
 ### New Features
-- [ ] **Enhanced validation system** - Improve validation with better error messages and custom validators
+- [x] **Enhanced validation system** - Improve validation with better error messages and custom validators
+  - Related: `packages/form-js-viewer/src/core/Validator.js`, `packages/form-js-viewer/src/core/ValidationRegistry.js`, `packages/form-js-viewer/src/Form.js`, `packages/form-json-schema/src/defs/validate.json`
+  - ✅ Implemented: Enhanced validation system with comprehensive features:
+    - **Custom validators**: Register custom validation functions via `customValidators` option or `registerValidator()` method. Supports both sync and async validators.
+    - **Better error messages**: Custom error messages for all validation rules (`requiredMessage`, `minMessage`, `maxMessage`, `minLengthMessage`, `maxLengthMessage`, `emailMessage`, `phoneMessage`, `patternErrorMessage`).
+    - **i18n support**: Integration with I18n service for localized error messages with translation keys.
+    - **Validation context**: Custom validators receive rich context including field, fieldInstance, value, form, data, and properties.
+    - **Error structure**: Support for structured error objects with `message`, `code`, `severity`, and `params` for programmatic handling.
+    - **Async validation**: Full support for asynchronous validators (e.g., server-side validation) with Promise handling in both `validate()` and field-level validation.
+    - **ValidationRegistry**: New service for managing custom validators with registration, unregistration, and lookup capabilities.
+    - Schema validation updated to support all new validation properties.
 - [x] **Form templates library** - Provide pre-built form templates for common use cases
   - Related: `packages/form-js-templates/`
   - ✅ Implemented: Created `@bpmn-io/form-js-templates` package with 8 common form templates (contact, registration, survey, feedback, invoice, order, job application, event registration). Includes `TemplateRegistry` class for managing templates with search and category filtering. Integrated template picker UI into playground with modal interface for browsing and selecting templates. Templates are exported from main `form-js` package and accessible via `defaultTemplateRegistry`.
 - [ ] **Advanced conditional logic** - Support complex conditional field visibility and validation rules
 - [x] **Multi-language support** - Add i18n support for form labels and messages
-  - Related: `packages/form-js-viewer/src/core/I18n.js`, `packages/form-js-viewer/src/core/index.js`, `packages/form-js-viewer/src/render/components/Label.js`, `packages/form-js-viewer/src/render/components/Description.js`, `packages/form-js-viewer/src/render/components/form-fields/parts/SimpleSelect.js`, `packages/form-js-editor/src/core/index.js`, `packages/form-js-viewer/src/index.js`
-  - ✅ Implemented: Introduced lightweight `I18n` service with DI providing `localize(value)` and `t(key, params)` APIs. Registered as `i18n` in Viewer and Editor core modules and exported from the Viewer package. Viewer components now localize schema-provided strings:
-    - `Label` and `Description` resolve localized values from either plain strings or `{ [locale]: string }` dictionaries before template evaluation.
-    - `SimpleSelect` localizes the selected value, option labels, and the placeholder (via `t('select.placeholder')`, defaulting to "Select").
-    Consumers can configure via options: `locale`, `fallbackLocale`, and `translations` (per-locale dictionaries). Existing schemas keep working unchanged; localization is opt-in by providing dictionaries or translations.
-- [ ] **Form analytics** - Track form interactions and completion rates
+  - Related: `packages/form-js-viewer/src/core/I18n.js`, `packages/form-js-viewer/src/core/index.js`, `packages/form-js-viewer/src/render/components/Label.js`, `packages/form-js-viewer/src/render/components/Description.js`, `packages/form-js-viewer/src/render/components/form-fields/parts/SimpleSelect.js`, `packages/form-js-viewer/src/render/components/form-fields/parts/SearchableSelect.js`, `packages/form-js-viewer/src/render/components/form-fields/Button.js`, `packages/form-js-editor/src/core/index.js`, `packages/form-js-editor/src/render/components/editor-form-fields/EditorText.js`, `packages/form-js-editor/src/features/palette/components/PaletteEntry.js`, `packages/form-js-editor/src/features/preview-mode/components/PreviewButton.js`, `packages/form-js-viewer/src/index.js`, `packages/form-js-viewer/src/Form.js`, `packages/form-js-editor/src/FormEditor.js`
+  - ✅ Implemented: Comprehensive i18n system with enhanced features:
+    - **Enhanced I18n Service**: Lightweight `I18n` service with DI providing `localize(value)` and `t(key, params)` APIs. Includes default translations for English, German, French, and Spanish. Supports runtime locale switching, fallback locales, and dynamic translation management.
+    - **Viewer Components**: All viewer components now support localization:
+      - `Label` and `Description` resolve localized values from either plain strings or `{ [locale]: string }` dictionaries before template evaluation.
+      - `SimpleSelect` and `SearchableSelect` localize selected values, option labels, and placeholders.
+      - `Button` component localizes button labels from schema.
+    - **Editor Components**: Full i18n support in editor UI:
+      - `EditorText` localizes placeholder messages for empty, expression-based, and templated text views.
+      - `PaletteEntry` localizes palette entry labels and tooltips with proper article handling.
+      - `PreviewButton` localizes preview button labels and tooltips.
+      - Context pad remove button titles are localized.
+    - **API Methods**: Form and FormEditor expose locale management APIs:
+      - `getLocale()`, `setLocale(locale)`, `getFallbackLocale()`, `setFallbackLocale(locale)`
+      - `addTranslations(locale, translations)`, `getTranslations(locale)`
+      - Locale changes emit `locale.changed` events for reactive updates.
+    - **Default Translations**: Built-in translations for common UI strings in 4 languages (en, de, fr, es), covering selectors, search, editor placeholders, palette actions, and preview controls.
+    - **Configuration**: Consumers can configure via options: `locale`, `fallbackLocale`, and `translations` (per-locale dictionaries). Existing schemas keep working unchanged; localization is opt-in by providing dictionaries or translations.
+- [x] **Form analytics** - Track form interactions and completion rates
+  - Related: `packages/form-js-viewer/src/core/Analytics.js`, `packages/form-js-viewer/src/Form.js`, `packages/form-js-viewer/test/spec/core/Analytics.spec.js`
+  - ✅ Implemented: Created comprehensive analytics system with `Analytics` service that tracks form interactions and completion rates. Features include:
+    - **Session tracking**: Tracks form sessions with start/end times, duration, and completion status
+    - **Field interactions**: Tracks field value changes, focus/blur events, and validation errors per field
+    - **Submission tracking**: Tracks submission attempts, success/failure rates, and error counts
+    - **Analytics data API**: `getAnalytics()` method returns comprehensive analytics data including session info, field-level analytics, submission history, and summary statistics
+    - **Event-driven**: Automatically tracks events via EventBus (`form.init`, `field.updated`, `formField.focus`, `formField.blur`, `submit`, etc.)
+    - **Configurable**: Options to enable/disable tracking, control field interaction tracking, and focus/blur tracking
+    - **Event callbacks**: Optional `onEvent` callback for custom analytics integration
+    - **Analytics events**: Emits analytics events (`analytics.session.started`, `analytics.field.changed`, `analytics.submission.completed`, etc.) for external listeners
+    - Form API methods: `getAnalytics()`, `trackFieldFocus()`, `trackFieldBlur()`, `resetAnalytics()`, `enableAnalytics()`, `disableAnalytics()`
 - [x] **Export/Import improvements** - Support additional export formats (PDF, CSV, etc.)
   - Related: `packages/form-js-viewer/src/util/exportForm.js`, `packages/form-js-playground/src/components/ExportMenu.js`
   - ✅ Implemented: Added comprehensive export functionality with support for PDF and CSV formats. Created `exportForm.js` utility module with functions for exporting form schemas and data to CSV and PDF formats. Added `ExportMenu` component to playground with dropdown menu for selecting export formats. Supports exporting form schema as JSON, CSV, or PDF, and form data as CSV or PDF. Uses dynamic imports for jspdf to avoid bundling when not needed. Includes proper error handling and user feedback.

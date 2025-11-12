@@ -19,11 +19,15 @@ export function LandingPage() {
           key: 'fullName',
           label: {
             en: 'Full name',
-            de: 'Vollständiger Name'
+            de: 'Vollständiger Name',
+            fr: 'Nom complet',
+            es: 'Nombre completo'
           },
           description: {
             en: 'Please enter your full legal name.',
-            de: 'Bitte geben Sie Ihren vollständigen Namen ein.'
+            de: 'Bitte geben Sie Ihren vollständigen Namen ein.',
+            fr: 'Veuillez entrer votre nom complet légal.',
+            es: 'Por favor ingrese su nombre completo legal.'
           },
           validate: {
             required: true
@@ -34,15 +38,30 @@ export function LandingPage() {
           key: 'language',
           label: {
             en: 'Preferred language',
-            de: 'Bevorzugte Sprache'
+            de: 'Bevorzugte Sprache',
+            fr: 'Langue préférée',
+            es: 'Idioma preferido'
           },
           values: [
-            { value: 'en', label: { en: 'English', de: 'Englisch' } },
-            { value: 'de', label: { en: 'German', de: 'Deutsch' } }
+            { value: 'en', label: { en: 'English', de: 'Englisch', fr: 'Anglais', es: 'Inglés' } },
+            { value: 'de', label: { en: 'German', de: 'Deutsch', fr: 'Allemand', es: 'Alemán' } },
+            { value: 'fr', label: { en: 'French', de: 'Französisch', fr: 'Français', es: 'Francés' } },
+            { value: 'es', label: { en: 'Spanish', de: 'Spanisch', fr: 'Espagnol', es: 'Español' } }
           ],
           validate: {
             required: true
           }
+        },
+        {
+          type: 'button',
+          key: 'submit',
+          label: {
+            en: 'Submit',
+            de: 'Absenden',
+            fr: 'Soumettre',
+            es: 'Enviar'
+          },
+          action: 'submit'
         }
       ]
     };

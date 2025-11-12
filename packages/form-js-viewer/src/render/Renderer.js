@@ -2,7 +2,7 @@ import { render } from 'preact';
 import { useCallback, useState } from 'preact/hooks';
 
 import { FormComponent } from './components/FormComponent';
-import { FormContext } from './context';
+import { FormContext, FormRenderContext, defaultFormRenderContextValue } from './context';
 
 /**
  * @typedef { { container } } Config
@@ -52,9 +52,14 @@ export function Renderer(config, eventBus, form, injector) {
       return null;
     }
 
+    // Use default FormRenderContext values to ensure all components are available
+    const formRenderContext = defaultFormRenderContextValue;
+
     return (
       <FormContext.Provider value={formContext}>
-        <FormComponent onChange={onChange} onSubmit={onSubmit} onReset={onReset} />
+        <FormRenderContext.Provider value={formRenderContext}>
+          <FormComponent onChange={onChange} onSubmit={onSubmit} onReset={onReset} />
+        </FormRenderContext.Provider>
       </FormContext.Provider>
     );
   };

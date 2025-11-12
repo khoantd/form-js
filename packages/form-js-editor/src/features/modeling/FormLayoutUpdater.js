@@ -28,7 +28,14 @@ export class FormLayoutUpdater extends CommandInterceptor {
 
   updateLayout(schema) {
     this._formLayouter.clear();
-    this._formLayouter.calculateLayout(clone(schema));
+    // Use replacer to filter out internal properties that may cause cyclic references
+    this._formLayouter.calculateLayout(clone(schema, (name, value) => {
+      if (['_parent', '_path'].includes(name)) {
+        return undefined;
+      }
+
+      return value;
+    }));
   }
 
   updateRowIds(event) {
@@ -42,7 +49,11 @@ export class FormLayoutUpdater extends CommandInterceptor {
       parent.components.forEach((formField) => {
         const row = this._formLayouter.getRowForField(formField);
 
-        updateRow(formField, row.id);
+        // Layout may not be calculated yet (happens in 'changed' event after state update)
+        // Only update row ID if row exists
+        if (row) {
+          updateRow(formField, row.id);
+        }
 
         // handle children recursively
         setRowIds(formField);

@@ -22,7 +22,7 @@ export function OptionsGroups(field, editField, getService) {
     return [];
   }
 
-  const context = { editField, field };
+  const context = { editField, field, getService };
   const id = 'valuesSource';
 
   /**

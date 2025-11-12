@@ -5,6 +5,7 @@ export function PaletteEntry(props) {
 
   const modeling = useService('modeling');
   const formEditor = useService('formEditor');
+  const i18n = useService('i18n', false);
 
   const Icon = getPaletteIcon({ icon, iconUrl, label, type });
 
@@ -19,15 +20,25 @@ export function PaletteEntry(props) {
     }
   };
 
+  const getTitle = () => {
+    if (i18n) {
+      const articleKey = getIndefiniteArticle(type) === 'an' ? 'editor.palette.article.an' : 'editor.palette.article.a';
+      const article = i18n.t(articleKey);
+      const localizedLabel = i18n.localize(label);
+      return i18n.t('editor.palette.create', { article, label: localizedLabel });
+    }
+    return `Create ${getIndefiniteArticle(type)} ${label} element`;
+  };
+
   return (
     <button
       type="button"
       class="fjs-palette-field fjs-drag-copy fjs-no-drop"
       data-field-type={type}
-      title={`Create ${getIndefiniteArticle(type)} ${label} element`}
+      title={getTitle()}
       onKeyDown={onKeyDown}>
       {Icon ? <Icon class="fjs-palette-field-icon" width="36" height="36" viewBox="0 0 54 54" /> : null}
-      <span class="fjs-palette-field-text">{label}</span>
+      <span class="fjs-palette-field-text">{i18n ? i18n.localize(label) : label}</span>
     </button>
   );
 }

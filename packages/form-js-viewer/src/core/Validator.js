@@ -10,12 +10,62 @@ const PHONE_PATTERN =
 
 const VALIDATE_FEEL_PROPERTIES = ['min', 'max', 'minLength', 'maxLength'];
 
+/**
+ * Normalize validation error to string format.
+ *
+ * @param {string|Object} error - Error message or error object
+ * @param {Object} i18n - I18n service for localization
+ * @returns {string} Normalized error message
+ */
+function normalizeError(error, i18n) {
+  if (!error) {
+    return null;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (typeof error === 'object') {
+    const { message, code, params } = error;
+
+    if (message) {
+      // If message is a translation key, use i18n
+      if (i18n && code && i18n.t) {
+        const translated = i18n.t(code, params);
+        // If translation was found (not just the key), use it
+        if (translated !== code) {
+          return translated;
+        }
+      }
+
+      // If message has params and i18n is available, try to translate
+      if (i18n && i18n.t && typeof message === 'string' && message.includes('{')) {
+        return i18n.t(message, params || {});
+      }
+
+      return message;
+    }
+
+    // Fallback to code if message is not available
+    if (code && i18n && i18n.t) {
+      return i18n.t(code, params || {});
+    }
+
+    return code || String(error);
+  }
+
+  return String(error);
+}
+
 export class Validator {
-  constructor(expressionLanguage, conditionChecker, form, formFieldRegistry) {
+  constructor(expressionLanguage, conditionChecker, form, formFieldRegistry, validationRegistry, i18n) {
     this._expressionLanguage = expressionLanguage;
     this._conditionChecker = conditionChecker;
     this._form = form;
     this._formFieldRegistry = formFieldRegistry;
+    this._validationRegistry = validationRegistry;
+    this._i18n = i18n;
   }
 
   /**
@@ -29,7 +79,7 @@ export class Validator {
     let errors = [];
 
     if (type === 'number') {
-      errors = [...errors, ...runNumberValidation(field, value)];
+      errors = [...errors, ...runNumberValidation(field, value, this._i18n)];
     }
 
     if (!validate) {
@@ -43,7 +93,7 @@ export class Validator {
       this._form,
     );
 
-    errors = [...errors, ...runPresetValidation(field, evaluatedValidation, value)];
+    errors = [...errors, ...runPresetValidation(field, evaluatedValidation, value, this._i18n)];
 
     return errors;
   }
@@ -54,7 +104,7 @@ export class Validator {
    * @param {Object} fieldInstance
    * @param {string} value
    *
-   * @returns {Array<string>}
+   * @returns {Array<string>|Promise<Array<string>>}
    */
   validateFieldInstance(fieldInstance, value) {
     const { id, expressionContextInfo } = fieldInstance;
@@ -69,41 +119,164 @@ export class Validator {
 
     let errors = [];
 
+    // Run built-in number validation
     if (type === 'number') {
-      errors = [...errors, ...runNumberValidation(field, value)];
+      errors = [...errors, ...runNumberValidation(field, value, this._i18n)];
     }
 
-    if (!validate) {
-      return errors;
+    // Run built-in preset validation
+    if (validate) {
+      const evaluatedValidation = evaluateFEELValues(validate, this._expressionLanguage, expressionContextInfo);
+      errors = [...errors, ...runPresetValidation(field, evaluatedValidation, value, this._i18n)];
     }
 
-    const evaluatedValidation = evaluateFEELValues(validate, this._expressionLanguage, expressionContextInfo);
+    // Run custom validators if registered
+    const customValidators = this._getCustomValidators(field);
+    if (customValidators.length > 0) {
+      const validationContext = this._createValidationContext(field, fieldInstance, value);
+      const customErrors = this._runCustomValidators(customValidators, validationContext);
 
-    errors = [...errors, ...runPresetValidation(field, evaluatedValidation, value)];
+      // Handle async validators
+      if (customErrors && typeof customErrors.then === 'function') {
+        return customErrors.then((asyncErrors) => {
+          return this._normalizeErrors([...errors, ...(asyncErrors || [])]);
+        });
+      }
+
+      errors = [...errors, ...(customErrors || [])];
+    }
+
+    return this._normalizeErrors(errors);
+  }
+
+  /**
+   * Get custom validators for a field.
+   *
+   * @private
+   * @param {Object} field - Field definition
+   * @returns {Array<Function>} Array of validator functions
+   */
+  _getCustomValidators(field) {
+    if (!this._validationRegistry || !field.validate || !field.validate.customValidators) {
+      return [];
+    }
+
+    const validatorNames = Array.isArray(field.validate.customValidators)
+      ? field.validate.customValidators
+      : [field.validate.customValidators];
+
+    return validatorNames
+      .map((name) => {
+        if (typeof name === 'string') {
+          return this._validationRegistry.get(name);
+        }
+        return null;
+      })
+      .filter((validator) => validator != null);
+  }
+
+  /**
+   * Create validation context for custom validators.
+   *
+   * @private
+   * @param {Object} field - Field definition
+   * @param {Object} fieldInstance - Field instance
+   * @param {any} value - Value to validate
+   * @returns {Object} Validation context
+   */
+  _createValidationContext(field, fieldInstance, value) {
+    const { data, properties } = this._form._getState();
+
+    return {
+      field,
+      fieldInstance,
+      value,
+      form: this._form,
+      data,
+      properties,
+    };
+  }
+
+  /**
+   * Run custom validators.
+   *
+   * @private
+   * @param {Array<Function>} validators - Array of validator functions
+   * @param {Object} context - Validation context
+   * @returns {Array|Promise<Array>} Array of errors or promise of errors
+   */
+  _runCustomValidators(validators, context) {
+    const errors = [];
+    const promises = [];
+
+    for (const validator of validators) {
+      try {
+        const result = validator(context);
+
+        // Handle async validators
+        if (result && typeof result.then === 'function') {
+          promises.push(result);
+        } else if (result) {
+          // Handle sync validators
+          const normalized = Array.isArray(result) ? result : [result];
+          errors.push(...normalized.filter((e) => e != null));
+        }
+      } catch (error) {
+        console.error('Error in custom validator:', error);
+        errors.push({
+          message: 'Validation error occurred',
+          code: 'validator.error',
+        });
+      }
+    }
+
+    // If there are async validators, wait for them
+    if (promises.length > 0) {
+      return Promise.all(promises).then((asyncResults) => {
+        const asyncErrors = asyncResults.flat().filter((e) => e != null);
+        return [...errors, ...asyncErrors];
+      });
+    }
 
     return errors;
   }
+
+  /**
+   * Normalize errors to string array.
+   *
+   * @private
+   * @param {Array} errors - Array of error messages or error objects
+   * @returns {Array<string>} Array of normalized error messages
+   */
+  _normalizeErrors(errors) {
+    return errors
+      .map((error) => normalizeError(error, this._i18n))
+      .filter((error) => error != null);
+  }
 }
 
-Validator.$inject = ['expressionLanguage', 'conditionChecker', 'form', 'formFieldRegistry'];
+Validator.$inject = ['expressionLanguage', 'conditionChecker', 'form', 'formFieldRegistry', 'validationRegistry', 'i18n'];
 
 // helpers //////////
 
-function runNumberValidation(field, value) {
+function runNumberValidation(field, value, i18n) {
   const { decimalDigits, increment } = field;
   const errors = [];
 
   if (value === 'NaN') {
-    errors.push('Value is not a number.');
+    const message = i18n && i18n.t ? i18n.t('validation.number.invalid', {}) : 'Value is not a number.';
+    errors.push(message);
   } else if (value) {
     if (decimalDigits >= 0 && countDecimals(value) > decimalDigits) {
-      errors.push(
-        'Value is expected to ' +
-          (decimalDigits === 0
-            ? 'be an integer'
-            : `have at most ${decimalDigits} decimal digit${decimalDigits > 1 ? 's' : ''}`) +
-          '.',
-      );
+      const message =
+        decimalDigits === 0
+          ? i18n && i18n.t
+            ? i18n.t('validation.number.integer', {})
+            : 'Value is expected to be an integer.'
+          : i18n && i18n.t
+            ? i18n.t('validation.number.decimalDigits', { count: decimalDigits })
+            : `Value is expected to have at most ${decimalDigits} decimal digit${decimalDigits > 1 ? 's' : ''}.`;
+      errors.push(message);
     }
 
     if (increment) {
@@ -116,7 +289,11 @@ function runNumberValidation(field, value) {
         const previousValue = bigValue.minus(offset);
         const nextValue = previousValue.plus(bigIncrement);
 
-        errors.push(`Please select a valid value, the two nearest valid values are ${previousValue} and ${nextValue}.`);
+        const message =
+          i18n && i18n.t
+            ? i18n.t('validation.number.increment', { previous: previousValue, next: nextValue })
+            : `Please select a valid value, the two nearest valid values are ${previousValue} and ${nextValue}.`;
+        errors.push(message);
       }
     }
   }
@@ -124,45 +301,93 @@ function runNumberValidation(field, value) {
   return errors;
 }
 
-function runPresetValidation(field, validation, value) {
+function runPresetValidation(field, validation, value, i18n) {
   const errors = [];
 
+  // Pattern validation
   if (validation.pattern && value && !new RegExp(validation.pattern).test(value)) {
-    errors.push(validation.patternErrorMessage || `Field must match pattern ${validation.pattern}.`);
+    const message = validation.patternErrorMessage
+      ? normalizeError(validation.patternErrorMessage, i18n)
+      : i18n && i18n.t
+        ? i18n.t('validation.pattern', { pattern: validation.pattern })
+        : `Field must match pattern ${validation.pattern}.`;
+    errors.push(message);
   }
 
+  // Required validation
   if (validation.required) {
     const isUncheckedCheckbox = field.type === 'checkbox' && value === false;
     const isUnsetValue = isNil(value) || value === '';
     const isEmptyMultiselect = Array.isArray(value) && value.length === 0;
 
     if (isUncheckedCheckbox || isUnsetValue || isEmptyMultiselect) {
-      errors.push('Field is required.');
+      const requiredMessage = validation.requiredMessage
+        ? normalizeError(validation.requiredMessage, i18n)
+        : i18n && i18n.t
+          ? i18n.t('validation.required', {})
+          : 'Field is required.';
+      errors.push(requiredMessage);
     }
   }
 
+  // Min value validation
   if ('min' in validation && (value || value === 0) && value < validation.min) {
-    errors.push(`Field must have minimum value of ${validation.min}.`);
+    const minMessage = validation.minMessage
+      ? normalizeError(validation.minMessage, i18n)
+      : i18n && i18n.t
+        ? i18n.t('validation.min', { min: validation.min })
+        : `Field must have minimum value of ${validation.min}.`;
+    errors.push(minMessage);
   }
 
+  // Max value validation
   if ('max' in validation && (value || value === 0) && value > validation.max) {
-    errors.push(`Field must have maximum value of ${validation.max}.`);
+    const maxMessage = validation.maxMessage
+      ? normalizeError(validation.maxMessage, i18n)
+      : i18n && i18n.t
+        ? i18n.t('validation.max', { max: validation.max })
+        : `Field must have maximum value of ${validation.max}.`;
+    errors.push(maxMessage);
   }
 
+  // Min length validation
   if ('minLength' in validation && value && value.trim().length < validation.minLength) {
-    errors.push(`Field must have minimum length of ${validation.minLength}.`);
+    const minLengthMessage = validation.minLengthMessage
+      ? normalizeError(validation.minLengthMessage, i18n)
+      : i18n && i18n.t
+        ? i18n.t('validation.minLength', { minLength: validation.minLength })
+        : `Field must have minimum length of ${validation.minLength}.`;
+    errors.push(minLengthMessage);
   }
 
+  // Max length validation
   if ('maxLength' in validation && value && value.trim().length > validation.maxLength) {
-    errors.push(`Field must have maximum length of ${validation.maxLength}.`);
+    const maxLengthMessage = validation.maxLengthMessage
+      ? normalizeError(validation.maxLengthMessage, i18n)
+      : i18n && i18n.t
+        ? i18n.t('validation.maxLength', { maxLength: validation.maxLength })
+        : `Field must have maximum length of ${validation.maxLength}.`;
+    errors.push(maxLengthMessage);
   }
 
+  // Phone validation
   if ('validationType' in validation && value && validation.validationType === 'phone' && !PHONE_PATTERN.test(value)) {
-    errors.push('Field must be a valid  international phone number. (e.g. +4930664040900)');
+    const phoneMessage = validation.phoneMessage
+      ? normalizeError(validation.phoneMessage, i18n)
+      : i18n && i18n.t
+        ? i18n.t('validation.phone', {})
+        : 'Field must be a valid international phone number. (e.g. +4930664040900)';
+    errors.push(phoneMessage);
   }
 
+  // Email validation
   if ('validationType' in validation && value && validation.validationType === 'email' && !EMAIL_PATTERN.test(value)) {
-    errors.push('Field must be a valid email.');
+    const emailMessage = validation.emailMessage
+      ? normalizeError(validation.emailMessage, i18n)
+      : i18n && i18n.t
+        ? i18n.t('validation.email', {})
+        : 'Field must be a valid email.';
+    errors.push(emailMessage);
   }
 
   return errors;

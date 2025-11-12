@@ -7,6 +7,7 @@ import { useService } from '../../../render/hooks/useService';
 export function PreviewButton() {
   const previewMode = useService('previewMode');
   const eventBus = useService('eventBus');
+  const i18n = useService('i18n', false);
   const [isActive, setIsActive] = useState(previewMode.isActive());
 
   useEffect(() => {
@@ -25,13 +26,17 @@ export function PreviewButton() {
     previewMode.toggle();
   }, [previewMode]);
 
+  const previewLabel = i18n ? i18n.t('editor.preview.button') : 'Preview';
+  const exitPreviewLabel = i18n ? i18n.t('editor.preview.close') : 'Exit Preview';
+  const title = isActive ? exitPreviewLabel : previewLabel;
+
   return (
     <button
       type="button"
       class={`fjs-preview-button ${isActive ? 'fjs-preview-button-active' : ''}`}
       onClick={handleClick}
-      title={isActive ? 'Exit preview mode' : 'Enter preview mode'}
-      aria-label={isActive ? 'Exit preview mode' : 'Enter preview mode'}>
+      title={title}
+      aria-label={title}>
       <svg
         width="16"
         height="16"
@@ -43,7 +48,7 @@ export function PreviewButton() {
           fill="currentColor"
         />
       </svg>
-      <span class="fjs-preview-button-label">{isActive ? 'Exit Preview' : 'Preview'}</span>
+      <span class="fjs-preview-button-label">{isActive ? exitPreviewLabel : previewLabel}</span>
     </button>
   );
 }

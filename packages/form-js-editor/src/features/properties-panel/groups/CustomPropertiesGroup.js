@@ -1,6 +1,6 @@
 import { ListGroup } from '@bpmn-io/properties-panel';
 
-import { has } from 'min-dash';
+import { has, get } from 'min-dash';
 
 import { CustomValueEntry } from '../entries';
 
@@ -14,13 +14,16 @@ export function CustomPropertiesGroup(field, editField) {
   const addEntry = (event) => {
     event.stopPropagation();
 
-    let index = Object.keys(properties).length + 1;
+    // Read current properties from field dynamically
+    const currentProperties = get(field, ['properties'], {});
+    let index = Object.keys(currentProperties).length + 1;
 
-    while (`key${index}` in properties) {
+    while (`key${index}` in currentProperties) {
       index++;
     }
 
-    editField(field, ['properties'], { ...properties, [`key${index}`]: 'value' });
+    const newProperties = { ...currentProperties, [`key${index}`]: 'value' };
+    editField(field, 'properties', newProperties);
   };
 
   const validateFactory = (key) => {
@@ -33,7 +36,9 @@ export function CustomPropertiesGroup(field, editField) {
         return 'Must not be empty.';
       }
 
-      if (has(properties, value)) {
+      // Read current properties from field dynamically
+      const currentProperties = get(field, ['properties'], {});
+      if (has(currentProperties, value)) {
         return 'Must be unique.';
       }
     };
@@ -43,7 +48,9 @@ export function CustomPropertiesGroup(field, editField) {
     const removeEntry = (event) => {
       event.stopPropagation();
 
-      return editField(field, ['properties'], removeKey(properties, key));
+      // Read current properties from field dynamically
+      const currentProperties = get(field, ['properties'], {});
+      return editField(field, 'properties', removeKey(currentProperties, key));
     };
 
     const id = `property-${field.id}-${index}`;

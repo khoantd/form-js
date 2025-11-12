@@ -1,4 +1,4 @@
-import { Importer, PathRegistry, SchemaValidator, I18n } from '@bpmn-io/form-js-viewer';
+import { Importer, PathRegistry, SchemaValidator, I18n, ThemeManager } from '@bpmn-io/form-js-viewer';
 
 import { EventBus } from './EventBus';
 import { DebounceFactory } from './Debounce';
@@ -24,4 +24,5 @@ export const CoreModule = {
   schemaValidator: ['type', SchemaValidator],
   versionControl: ['type', VersionControl],
   i18n: ['type', I18n],
+  themeManager: ['type', ThemeManager],
 };

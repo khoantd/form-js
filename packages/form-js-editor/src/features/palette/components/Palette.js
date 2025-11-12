@@ -209,7 +209,15 @@ function groupEntries(entries) {
 
   entries.forEach((entry) => {
     const { group } = entry;
-    getGroup(group).entries.push(entry);
+    const targetGroup = getGroup(group);
+    // Only add entry if it has a valid group that exists in PALETTE_GROUPS
+    if (targetGroup) {
+      targetGroup.entries.push(entry);
+    } else if (group) {
+      // Log warning for entries with invalid group values
+      console.warn(`Palette entry "${entry.type}" has invalid group "${group}". Valid groups are: ${PALETTE_GROUPS.map(g => g.id).join(', ')}`);
+    }
+    // Silently skip entries with null/undefined groups (e.g., 'default' type)
   });
 
   return groups.filter((g) => g.entries.length);
@@ -241,7 +249,15 @@ export function collectPaletteEntries(formFields, customTypesPaletteProvider = n
         iconUrl: fieldConfig.iconUrl,
       };
     })
-    .filter(({ type }) => type !== 'default' && !customTypeTypes.has(type));
+    .filter(({ type, group }) => {
+      // Exclude 'default' type and custom types
+      if (type === 'default' || customTypeTypes.has(type)) {
+        return false;
+      }
+      // Only include entries with valid groups (non-null, non-undefined)
+      // Entries without groups won't appear in the palette
+      return group != null;
+    });
 }
 
 /**

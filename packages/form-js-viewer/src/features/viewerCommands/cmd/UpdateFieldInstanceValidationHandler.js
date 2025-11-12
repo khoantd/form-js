@@ -15,6 +15,20 @@ export class UpdateFieldInstanceValidationHandler {
     context.oldErrors = clone(errors);
 
     const fieldErrors = this._validator.validateFieldInstance(fieldInstance, value);
+
+    // Handle async validation
+    if (fieldErrors && typeof fieldErrors.then === 'function') {
+      context.asyncValidation = true;
+      return fieldErrors.then((asyncErrors) => {
+        const updatedErrors = set(
+          errors,
+          [id, ...Object.values(indexes || {})],
+          asyncErrors && asyncErrors.length ? asyncErrors : undefined,
+        );
+        this._form._setState({ errors: updatedErrors });
+      });
+    }
+
     const updatedErrors = set(
       errors,
       [id, ...Object.values(indexes || {})],

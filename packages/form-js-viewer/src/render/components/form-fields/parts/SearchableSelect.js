@@ -36,6 +36,9 @@ export function SearchableSelect(props) {
 
   const label = useMemo(() => value && getLabelCorrelation(value), [value, getLabelCorrelation]);
 
+  const i18n = useService('i18n', false);
+  const searchPlaceholder = i18n ? i18n.t('search.placeholder') : 'Search';
+
   // whenever we change the underlying value, set the label to it
   useEffect(() => {
     setFilter(label || '');
@@ -151,7 +154,7 @@ export function SearchableSelect(props) {
           onChange={onInputChange}
           type="text"
           value={filter}
-          placeholder={'Search'}
+          placeholder={searchPlaceholder}
           autoComplete="off"
           onKeyDown={onInputKeyDown}
           onMouseDown={onInputMouseDown}
@@ -176,7 +179,7 @@ export function SearchableSelect(props) {
       <div class="fjs-select-anchor">
         {displayState.displayDropdown && (
           <DropdownList
-            values={filteredOptions}
+            values={i18n ? filteredOptions.map((option) => ({ ...option, label: i18n.localize(option.label) })) : filteredOptions}
             getLabel={(option) => option.label}
             onValueSelected={(option) => {
               pickOption(option);

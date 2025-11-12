@@ -19,6 +19,11 @@ export function FormField(props) {
 
   const { field, indexes, onChange: _onChange } = props;
 
+  // Guard against undefined field
+  if (!field || !field.type) {
+    return null;
+  }
+
   const formFields = useService('formFields'),
     viewerCommands = useService('viewerCommands', false),
     formFieldInstanceRegistry = useService('formFieldInstanceRegistry', false),
@@ -28,9 +33,22 @@ export function FormField(props) {
 
   const { initialData, data, errors, properties } = form._getState();
 
-  const { Element, Hidden, Column } = useContext(FormRenderContext);
+  const renderContext = useContext(FormRenderContext);
+  const { Element, Hidden, Column } = renderContext || {};
 
-  const { formId } = useContext(FormContext);
+  // Guard against undefined context components
+  if (!Element || !Hidden || !Column) {
+    console.warn('[FormField] Missing required components from FormRenderContext', { Element: !!Element, Hidden: !!Hidden, Column: !!Column });
+    return null;
+  }
+
+  const formContext = useContext(FormContext);
+  const { formId } = formContext || {};
+
+  // Guard against undefined formId (should not happen, but safe fallback)
+  if (!formId) {
+    console.warn('[FormField] formId is undefined from FormContext');
+  }
 
   // track whether we should trigger initial validation on certain actions, e.g. field blur
   // disabled straight away, if viewerCommands are not available
@@ -139,7 +157,7 @@ export function FormField(props) {
     return <Hidden field={field} />;
   }
 
-  const domId = `${prefixId(field.id, formId, indexes)}`;
+  const domId = `${prefixId(field.id, formId || '', indexes)}`;
   const fieldErrors = get(errors, [field.id, ...Object.values(indexes || {})]) || [];
 
   const formFieldElement = (

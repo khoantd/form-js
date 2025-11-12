@@ -27,6 +27,19 @@ export function Router({ routes, defaultRoute = '/start' }) {
     return <div>Route not found: {route}</div>;
   }
 
-  return <Component />;
+  // Wrap component render in error boundary
+  try {
+    return <Component />;
+  } catch (error) {
+    console.error('Error rendering component:', error);
+    return (
+      <div style={{ padding: '20px', fontFamily: 'monospace' }}>
+        <h1>Render Error</h1>
+        <p><strong>Route:</strong> {route}</p>
+        <p><strong>Error:</strong> {error.message}</p>
+        <pre>{error.stack}</pre>
+      </div>
+    );
+  }
 }
 

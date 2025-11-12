@@ -16,6 +16,22 @@ export default defineConfig(() => {
     define: {
       global: 'window', // necessary to fix Dragula error: `global is not defined`
     },
+    // Suppress source map warnings in development
+    server: {
+      sourcemapIgnoreList: (sourcePath) => {
+        // Ignore source map warnings for:
+        // - node_modules and dist files
+        // - anonymous code (browser extensions like Preact DevTools)
+        // - installHook (Preact DevTools injection)
+        return (
+          sourcePath.includes('node_modules') ||
+          sourcePath.includes('/dist/') ||
+          sourcePath.includes('<anonymous') ||
+          sourcePath.includes('installHook') ||
+          sourcePath.includes('%3Canonymous')
+        );
+      },
+    },
     plugins: [
       {
         name: 'treat-js-files-as-jsx',
@@ -55,6 +71,7 @@ export default defineConfig(() => {
       },
     },
     build: {
+      sourcemap: false, // Disable source maps in production builds
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'e2e/index.html'),

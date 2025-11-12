@@ -159,7 +159,19 @@ export class PathRegistry {
   executeRecursivelyOnFields(field, fn, context = {}) {
     let result = true;
 
-    const formFieldConfig = this._formFields.get(field.type).config;
+    // Guard against undefined field or missing type
+    if (!field || !field.type) {
+      return result;
+    }
+
+    const formFieldDefinition = this._formFields.get(field.type);
+    
+    // Guard against undefined form field definition (e.g., when custom type not registered)
+    if (!formFieldDefinition || !formFieldDefinition.config) {
+      return result;
+    }
+
+    const formFieldConfig = formFieldDefinition.config;
 
     if (formFieldConfig.keyed) {
       const callResult = fn({ field, isClosed: true, isRepeatable: false, context });
@@ -176,6 +188,11 @@ export class PathRegistry {
 
     if (Array.isArray(field.components)) {
       for (const child of field.components) {
+        // Guard against undefined/null children in components array
+        if (!child) {
+          continue;
+        }
+        
         const callResult = this.executeRecursivelyOnFields(child, fn, clone(context));
         result = result && callResult;
 

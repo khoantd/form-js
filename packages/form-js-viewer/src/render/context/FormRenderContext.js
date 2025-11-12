@@ -1,6 +1,6 @@
 import { createContext } from 'preact';
 
-export const FormRenderContext = createContext({
+const defaultFormRenderContext = {
   Empty: (props) => {
     return null;
   },
@@ -29,7 +29,7 @@ export const FormRenderContext = createContext({
     );
   },
   Column: (props) => {
-    if (props.field.type === 'default') {
+    if (props.field?.type === 'default') {
       return props.children;
     }
 
@@ -42,4 +42,9 @@ export const FormRenderContext = createContext({
   hoverInfo: {
     cleanup: () => {},
   },
-});
+};
+
+export const FormRenderContext = createContext(defaultFormRenderContext);
+
+// Export default value for use in providers
+export const defaultFormRenderContextValue = defaultFormRenderContext;
