@@ -281,6 +281,9 @@ export class CustomTypeRegistry {
 
     this._eventBus.fire('customTypes.changed');
 
+    // Persist to localStorage so update survives page refresh
+    this._saveToStorage();
+
     return updated;
   }
 
@@ -300,6 +303,9 @@ export class CustomTypeRegistry {
 
     this._eventBus.fire('customTypes.removed', { type: existing });
     this._eventBus.fire('customTypes.changed');
+
+    // Persist to localStorage so deletion survives page refresh
+    this._saveToStorage();
   }
 
   /**
@@ -384,6 +390,10 @@ export class CustomTypeRegistry {
 
     this._eventBus.fire('customTypes.imported', { count: types.length });
     this._eventBus.fire('customTypes.changed');
+
+    // Persist to localStorage so imported types survive page refresh
+    // Note: create() and update() already save, but we save here too to ensure consistency
+    this._saveToStorage();
   }
 
   /**
