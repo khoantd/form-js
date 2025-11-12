@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 
 import { useSingleLineTemplateEvaluation } from '../hooks';
+import { useService } from '../hooks/useService';
 
 /**
  * @typedef Props
@@ -18,7 +19,10 @@ import { useSingleLineTemplateEvaluation } from '../hooks';
 export function Label(props) {
   const { id, htmlFor, label, collapseOnEmpty = true, required = false } = props;
 
-  const evaluatedLabel = useSingleLineTemplateEvaluation(label || '', { debug: true });
+  const i18n = useService && useService('i18n', false);
+  const localized = i18n ? i18n.localize(label) : label;
+
+  const evaluatedLabel = useSingleLineTemplateEvaluation(localized || '', { debug: true });
 
   return (
     <label

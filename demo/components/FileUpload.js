@@ -90,6 +90,7 @@ export function FileUpload({ onFileLoad, onError, accept = '.json', showButton =
           type="button"
           class="demo-button demo-button-primary"
           onClick={handleButtonClick}
+          aria-label="Open a JSON form file"
         >
           Open form file
         </button>
@@ -106,7 +107,7 @@ export function FileUpload({ onFileLoad, onError, accept = '.json', showButton =
 
       {error && (
         <div class="demo-error-message" role="alert">
-          {error.message}
+          <span class="sr-only">Error: </span>{error.message}
         </div>
       )}
     </div>

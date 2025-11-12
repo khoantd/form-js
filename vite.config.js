@@ -49,6 +49,8 @@ export default defineConfig(() => {
       preprocessorOptions: {
         scss: {
           quietDeps: true, // Suppress deprecation warnings from dependencies (like @ibm/plex)
+          // Note: Warnings from IBM Plex package's internal @import usage will still appear
+          // but our own @use statement won't generate warnings
         },
       },
     },

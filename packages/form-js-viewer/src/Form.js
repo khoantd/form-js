@@ -85,6 +85,19 @@ export class Form {
 
     this.get('eventBus').fire('form.init');
 
+    // Register any custom form field types provided via options
+    if (Array.isArray(options.customFormFieldTypes) && options.customFormFieldTypes.length) {
+      const formFields = this.get('formFields', false);
+      if (formFields) {
+        options.customFormFieldTypes.forEach((formField) => {
+          const type = (formField && formField.config && formField.config.type) || null;
+          if (type) {
+            formFields.register(type, formField);
+          }
+        });
+      }
+    }
+
     // Apply initial theme if provided
     if (theme) {
       try {
@@ -109,6 +122,36 @@ export class Form {
 
     // clear form services
     this._emit('form.clear');
+  }
+
+  /**
+   * Register a custom form field type at runtime.
+   *
+   * @param {string|Object} typeOrFormField - Type name or form field implementation (with config.type)
+   * @param {Object} [formField] - Form field implementation if first arg is a string
+   */
+  registerFormFieldType(typeOrFormField, formField) {
+    const formFields = this.get('formFields', false);
+    if (!formFields) {
+      throw new Error('formFields service not available');
+    }
+
+    let type = null;
+    let impl = null;
+
+    if (typeof typeOrFormField === 'string') {
+      type = typeOrFormField;
+      impl = formField;
+    } else if (typeOrFormField && typeOrFormField.config && typeOrFormField.config.type) {
+      type = typeOrFormField.config.type;
+      impl = typeOrFormField;
+    }
+
+    if (!type || !impl) {
+      throw new Error('Invalid arguments for registerFormFieldType');
+    }
+
+    formFields.register(type, impl);
   }
 
   /**
@@ -422,8 +465,19 @@ export class Form {
   _createInjector(options, container) {
     const { modules = this._getModules(), additionalModules = [], ...config } = options;
 
+    // Derive customFieldTypes from customFormFieldTypes if not explicitly provided
+    const derivedCustomTypes =
+      Array.isArray(options.customFormFieldTypes)
+        ? options.customFormFieldTypes
+            .map((ff) => (ff && ff.config && ff.config.type) || null)
+            .filter(Boolean)
+        : [];
+
     const enrichedConfig = {
       ...config,
+      customFieldTypes: Array.isArray(config.customFieldTypes) && config.customFieldTypes.length
+        ? config.customFieldTypes
+        : derivedCustomTypes,
       renderer: {
         container,
       },

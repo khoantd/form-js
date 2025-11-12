@@ -9,6 +9,7 @@ import XMarkIcon from '../icons/XMark.svg';
 import AngelDownIcon from '../icons/AngelDown.svg';
 import AngelUpIcon from '../icons/AngelUp.svg';
 import { DropdownList } from './DropdownList';
+import { useService } from '../../../hooks/useService';
 
 export function SimpleSelect(props) {
   const { domId, disabled, errors, onBlur, onFocus, field, readonly, value } = props;
@@ -32,6 +33,11 @@ export function SimpleSelect(props) {
   const getLabelCorrelation = useGetLabelCorrelation(options);
 
   const valueLabel = useMemo(() => value && getLabelCorrelation(value), [value, getLabelCorrelation]);
+
+  const i18n = useService && useService('i18n', false);
+  const placeholder = i18n ? i18n.t('select.placeholder') : 'Select';
+  const localizedValueLabel = i18n ? i18n.localize(valueLabel) : valueLabel;
+  const localizeOption = (option) => (i18n ? { ...option, label: i18n.localize(option.label) } : option);
 
   const pickOption = useCallback(
     (option) => {
@@ -97,14 +103,14 @@ export function SimpleSelect(props) {
         onBlur={onInputBlur}
         onMouseDown={onMouseDown}>
         <div class={classNames('fjs-select-display', { 'fjs-select-placeholder': !value })} id={`${domId}-display`}>
-          {valueLabel || 'Select'}
+          {localizedValueLabel || placeholder}
         </div>
         {!disabled && (
           <input
             ref={inputRef}
             id={domId}
             class="fjs-select-hidden-input"
-            value={valueLabel}
+            value={localizedValueLabel}
             onFocus={onInputFocus}
             onBlur={onInputBlur}
             aria-describedby={props['aria-describedby']}
@@ -125,7 +131,7 @@ export function SimpleSelect(props) {
       <div class="fjs-select-anchor">
         {displayState.displayDropdown && (
           <DropdownList
-            values={options}
+            values={i18n ? options.map(localizeOption) : options}
             getLabel={(option) => option.label}
             initialFocusIndex={initialFocusIndex}
             onValueSelected={(option) => {

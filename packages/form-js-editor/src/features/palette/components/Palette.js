@@ -40,19 +40,31 @@ export const PALETTE_GROUPS = [
     label: 'Action',
     id: 'action',
   },
+  {
+    label: 'Custom',
+    id: 'custom',
+  },
 ];
 
 export function Palette(props) {
   const formFields = useService('formFields');
   const pluginRegistry = useService('pluginRegistry', false);
+  const customTypesPaletteProvider = useService('customTypesPaletteProvider', false);
+  const eventBus = useService('eventBus', false);
 
   const initialPaletteEntries = useRef((() => {
-    const entries = collectPaletteEntries(formFields);
+    const entries = collectPaletteEntries(formFields, customTypesPaletteProvider);
     
     // Add plugin palette entries
     if (pluginRegistry) {
       const pluginEntries = pluginRegistry.getPaletteEntries();
       entries.push(...pluginEntries);
+    }
+    
+    // Add custom types palette entries
+    if (customTypesPaletteProvider) {
+      const customEntries = customTypesPaletteProvider.getPaletteEntries();
+      entries.push(...customEntries);
     }
     
     return entries;
@@ -86,6 +98,35 @@ export function Palette(props) {
     },
     [searchTerm, simplifyString],
   );
+
+  // Update entries when custom types change
+  useEffect(() => {
+    if (!customTypesPaletteProvider || !eventBus) {
+      return;
+    }
+
+    const handleCustomTypesChanged = () => {
+      const entries = collectPaletteEntries(formFields, customTypesPaletteProvider);
+      
+      // Add plugin palette entries
+      if (pluginRegistry) {
+        const pluginEntries = pluginRegistry.getPaletteEntries();
+        entries.push(...pluginEntries);
+      }
+      
+      // Add custom types palette entries
+      const customEntries = customTypesPaletteProvider.getPaletteEntries();
+      entries.push(...customEntries);
+      
+      initialPaletteEntries.current = entries;
+      setPaletteEntries(entries.filter(filter));
+    };
+
+    eventBus.on('customTypes.changed', handleCustomTypesChanged);
+    return () => {
+      eventBus.off('customTypes.changed', handleCustomTypesChanged);
+    };
+  }, [customTypesPaletteProvider, eventBus, formFields, pluginRegistry, filter]);
 
   // filter entries on search change
   useEffect(() => {
@@ -178,9 +219,15 @@ function groupEntries(entries) {
  * Returns a list of palette entries.
  *
  * @param {FormFields} formFields
+ * @param {CustomTypesPaletteProvider} [customTypesPaletteProvider] - Optional provider to exclude custom types from formFields
  * @returns {Array<PaletteEntry>}
  */
-export function collectPaletteEntries(formFields) {
+export function collectPaletteEntries(formFields, customTypesPaletteProvider = null) {
+  // Get custom type types to exclude from formFields collection
+  const customTypeTypes = customTypesPaletteProvider
+    ? new Set(customTypesPaletteProvider.getPaletteEntries().map((entry) => entry.type))
+    : new Set();
+
   return Object.entries(formFields._formFields)
     .map(([type, formField]) => {
       const { config: fieldConfig } = formField;
@@ -194,7 +241,7 @@ export function collectPaletteEntries(formFields) {
         iconUrl: fieldConfig.iconUrl,
       };
     })
-    .filter(({ type }) => type !== 'default');
+    .filter(({ type }) => type !== 'default' && !customTypeTypes.has(type));
 }
 
 /**

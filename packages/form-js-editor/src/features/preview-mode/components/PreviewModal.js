@@ -4,12 +4,52 @@ import { Form } from '@bpmn-io/form-js-viewer';
 import { useService } from '../../../render/hooks/useService';
 
 /**
+ * Convert custom type definitions to form field definitions for the viewer.
+ *
+ * @param {Array} customTypes - Array of custom type definitions
+ * @param {Object} formFields - Form fields registry from editor
+ * @returns {Array} Array of form field definitions for viewer
+ */
+function convertCustomTypesForViewer(customTypes, formFields, customTypeRegistry) {
+  if (!customTypes || !Array.isArray(customTypes) || customTypes.length === 0) {
+    return [];
+  }
+
+  return customTypes
+    .map((customType) => {
+      const { type, baseType } = customType;
+
+      // Ensure the custom type is registered before trying to get it
+      if (customTypeRegistry) {
+        try {
+          customTypeRegistry.ensureRegistered();
+        } catch (error) {
+          console.warn(`Failed to ensure custom type "${type}" is registered:`, error);
+        }
+      }
+
+      // Get the registered form field from editor (which includes custom types)
+      const registeredField = formFields.get(type, false);
+      if (!registeredField) {
+        console.warn(`Custom type "${type}" not found in formFields registry`);
+        return null;
+      }
+
+      // Return the form field definition as-is (it's already in the correct format)
+      return registeredField;
+    })
+    .filter(Boolean);
+}
+
+/**
  * Preview modal component that displays the form in preview mode.
  */
 export function PreviewModal() {
   const previewMode = useService('previewMode');
   const formEditor = useService('formEditor');
   const eventBus = useService('eventBus');
+  const customTypeRegistry = useService('customTypeRegistry', false);
+  const formFields = useService('formFields', false);
   const containerRef = useRef(null);
   const formRef = useRef(null);
   const [isActive, setIsActive] = useState(previewMode.isActive());
@@ -43,9 +83,23 @@ export function PreviewModal() {
       return;
     }
 
-    // Create form viewer instance
+        // Get custom types and convert them for the viewer
+        let customFormFieldTypes = [];
+        if (customTypeRegistry && formFields) {
+          // Ensure all custom types are registered before converting
+          try {
+            customTypeRegistry.ensureRegistered();
+          } catch (error) {
+            console.warn('Failed to ensure custom types are registered before preview:', error);
+          }
+          const customTypes = customTypeRegistry.list();
+          customFormFieldTypes = convertCustomTypesForViewer(customTypes, formFields, customTypeRegistry);
+        }
+
+    // Create form viewer instance with custom types
     const form = new Form({
       container: containerRef.current,
+      customFormFieldTypes,
     });
 
     formRef.current = form;
@@ -66,16 +120,67 @@ export function PreviewModal() {
       }
     }
 
+    // Listen for custom types changes - recreate form with updated custom types
+    function handleCustomTypesChanged() {
+      if (!formRef.current || !containerRef.current) {
+        return;
+      }
+
+      const { schema: currentSchema } = formEditor._getState();
+      if (!currentSchema) {
+        return;
+      }
+
+      // Preserve current form data
+      const currentData = formRef.current._getState()?.data || {};
+
+      // Destroy old form
+      formRef.current.destroy();
+      formRef.current = null;
+
+          // Get updated custom types
+          let updatedCustomFormFieldTypes = [];
+          if (customTypeRegistry && formFields) {
+            // Ensure all custom types are registered before converting
+            try {
+              customTypeRegistry.ensureRegistered();
+            } catch (error) {
+              console.warn('Failed to ensure custom types are registered before preview update:', error);
+            }
+            const customTypes = customTypeRegistry.list();
+            updatedCustomFormFieldTypes = convertCustomTypesForViewer(customTypes, formFields, customTypeRegistry);
+          }
+
+      // Create new form with updated custom types
+      const newForm = new Form({
+        container: containerRef.current,
+        customFormFieldTypes: updatedCustomFormFieldTypes,
+      });
+
+      formRef.current = newForm;
+
+      // Re-import schema with preserved data
+      newForm.importSchema(currentSchema, currentData).catch((error) => {
+        console.error('Failed to re-import schema after custom types change:', error);
+      });
+    }
+
     eventBus.on('changed', handleSchemaChanged);
+    if (customTypeRegistry) {
+      eventBus.on('customTypes.changed', handleCustomTypesChanged);
+    }
 
     return () => {
       eventBus.off('changed', handleSchemaChanged);
+      if (customTypeRegistry) {
+        eventBus.off('customTypes.changed', handleCustomTypesChanged);
+      }
       if (formRef.current) {
         formRef.current.destroy();
         formRef.current = null;
       }
     };
-  }, [isActive, formEditor, eventBus]);
+  }, [isActive, formEditor, eventBus, customTypeRegistry, formFields]);
 
   // Handle escape key to exit preview mode
   useEffect(() => {

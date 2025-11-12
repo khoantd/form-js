@@ -90,6 +90,19 @@ export class FormEditor {
 
     this.get('eventBus').fire('form.init');
 
+    // Register any custom form field types provided via options
+    if (Array.isArray(options.customFormFieldTypes) && options.customFormFieldTypes.length) {
+      const formFields = this.get('formFields', false);
+      if (formFields) {
+        options.customFormFieldTypes.forEach((formField) => {
+          const type = (formField && formField.config && formField.config.type) || null;
+          if (type) {
+            formFields.register(type, formField);
+          }
+        });
+      }
+    }
+
     // Apply initial theme if provided
     if (theme) {
       try {
@@ -116,6 +129,90 @@ export class FormEditor {
     this._emit('form.clear');
   }
 
+  /**
+   * Register a custom form field type at runtime.
+   *
+   * @param {string|Object} typeOrFormField - Type name or form field implementation (with config.type)
+   * @param {Object} [formField] - Form field implementation if first arg is a string
+   */
+  registerFormFieldType(typeOrFormField, formField) {
+    const formFields = this.get('formFields', false);
+    if (!formFields) {
+      throw new Error('formFields service not available');
+    }
+
+    let type = null;
+    let impl = null;
+
+    if (typeof typeOrFormField === 'string') {
+      type = typeOrFormField;
+      impl = formField;
+    } else if (typeOrFormField && typeOrFormField.config && typeOrFormField.config.type) {
+      type = typeOrFormField.config.type;
+      impl = typeOrFormField;
+    }
+
+    if (!type || !impl) {
+      throw new Error('Invalid arguments for registerFormFieldType');
+    }
+
+    formFields.register(type, impl);
+  }
+
+  /**
+   * Register a custom form field type definition.
+   *
+   * @param {Object} definition - Custom type definition
+   * @returns {Object} The created custom type definition
+   */
+  registerCustomFormFieldType(definition) {
+    const customTypeRegistry = this.get('customTypeRegistry', false);
+    if (!customTypeRegistry) {
+      throw new Error('Custom type registry not available');
+    }
+    return customTypeRegistry.create(definition);
+  }
+
+  /**
+   * Get all registered custom form field types.
+   *
+   * @returns {Array<Object>} Array of custom type definitions
+   */
+  getCustomFormFieldTypes() {
+    const customTypeRegistry = this.get('customTypeRegistry', false);
+    if (!customTypeRegistry) {
+      return [];
+    }
+    return customTypeRegistry.list();
+  }
+
+  /**
+   * Export custom types as JSON.
+   *
+   * @returns {string} JSON string of custom types
+   */
+  exportCustomTypes() {
+    const customTypeRegistry = this.get('customTypeRegistry', false);
+    if (!customTypeRegistry) {
+      throw new Error('Custom type registry not available');
+    }
+    return customTypeRegistry.export();
+  }
+
+  /**
+   * Import custom types from JSON.
+   *
+   * @param {string} json - JSON string of custom types
+   * @param {boolean} [merge=false] - If true, merge with existing types. If false, replace all.
+   */
+  importCustomTypes(json, merge = false) {
+    const customTypeRegistry = this.get('customTypeRegistry', false);
+    if (!customTypeRegistry) {
+      throw new Error('Custom type registry not available');
+    }
+    return customTypeRegistry.import(json, merge);
+  }
+
   destroy() {
     // destroy form services
     this.get('eventBus').fire('form.destroy');
@@ -135,6 +232,14 @@ export class FormEditor {
     return new Promise((resolve, reject) => {
       try {
         this.clear();
+
+        // Ensure custom types are registered after clear() but before importSchema
+        // The form.clear event listener will re-register them, but we also ensure it here
+        const customTypeRegistry = this.get('customTypeRegistry', false);
+        if (customTypeRegistry) {
+          // Use the public method to ensure all custom types are registered
+          customTypeRegistry.ensureRegistered();
+        }
 
         const { schema: importedSchema, warnings } = this.get('importer').importSchema(schema);
 
@@ -353,8 +458,19 @@ export class FormEditor {
   _createInjector(options, container) {
     const { modules = this._getModules(), additionalModules = [], plugins = [], renderer = {}, ...config } = options;
 
+    // Derive customFieldTypes from customFormFieldTypes if not explicitly provided
+    const derivedCustomTypes =
+      Array.isArray(options.customFormFieldTypes)
+        ? options.customFormFieldTypes
+            .map((ff) => (ff && ff.config && ff.config.type) || null)
+            .filter(Boolean)
+        : [];
+
     const enrichedConfig = {
       ...config,
+      customFieldTypes: Array.isArray(config.customFieldTypes) && config.customFieldTypes.length
+        ? config.customFieldTypes
+        : derivedCustomTypes,
       renderer: {
         ...renderer,
         container,

@@ -8,10 +8,11 @@ import { FormFieldRegistry } from './FormFieldRegistry';
 import { FormFieldInstanceRegistry } from './FormFieldInstanceRegistry';
 import { SchemaValidator } from './SchemaValidator';
 import { ThemeManager } from './ThemeManager';
+import { I18n } from './I18n';
 
 import { RenderModule } from '../render';
 
-export { Importer, FieldFactory, FormFieldRegistry, PathRegistry, FormLayouter, SchemaValidator, ThemeManager };
+export { Importer, FieldFactory, FormFieldRegistry, PathRegistry, FormLayouter, SchemaValidator, ThemeManager, I18n };
 
 export const CoreModule = {
   __depends__: [RenderModule],
@@ -25,4 +26,5 @@ export const CoreModule = {
   validator: ['type', Validator],
   schemaValidator: ['type', SchemaValidator],
   themeManager: ['type', ThemeManager],
+  i18n: ['type', I18n],
 };

@@ -17,6 +17,8 @@ import { ModularSection } from './ModularSection';
 import { Palette, collectPaletteEntries, getPaletteIcon } from '../../features/palette/components/Palette';
 import { InjectedRendersRoot } from '../../features/render-injection/components/InjectedRendersRoot';
 import { PreviewButton, PreviewModal } from '../../features/preview-mode/components';
+import { CustomTypeBuilderModal } from '../../features/custom-types/ui';
+import { CustomTypeBuilderFill } from '../../features/custom-types/components/CustomTypeBuilderFill';
 
 import { SlotFillRoot } from '../../features/render-injection/slot-fill';
 
@@ -125,6 +127,11 @@ function Element(props) {
   // Use proper DOM delegation - handle clicks on the form container
   const onClick = useCallback(
     (event) => {
+      // Ignore clicks on dragula elements (mirror, transit, etc.)
+      if (event.target.closest('.gu-mirror, .gu-transit')) {
+        return;
+      }
+
       // Find the closest form field element
       const fieldEl = event.target.closest('[data-id]');
 
@@ -135,7 +142,15 @@ function Element(props) {
       const id = fieldEl.dataset.id;
 
       // Only handle clicks on the field itself, not on nested elements
-      if (id === field.id && event.target.closest('[data-id]') === fieldEl) {
+      // Check if the click target is within this field (not a nested field)
+      const clickedFieldId = fieldEl.dataset.id;
+      if (clickedFieldId === field.id) {
+        // Verify we're not clicking on a nested field
+        const nestedField = event.target.closest('[data-id]');
+        if (nestedField && nestedField !== fieldEl) {
+          // Clicked on a nested field, don't handle it here
+          return;
+        }
         selection.toggle(field);
       }
     },
@@ -417,6 +432,17 @@ export function FormEditor() {
       if (event && event.element) {
         event.element.style.cursor = '';
       }
+      
+      // Ensure any dragula elements are cleaned up
+      // Sometimes dragula leaves elements in the DOM that can block clicks
+      setTimeout(() => {
+        const dragulaElements = document.querySelectorAll('.gu-mirror, .gu-transit, .gu-unselectable');
+        dragulaElements.forEach((el) => {
+          if (el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        });
+      }, 0);
     };
 
     eventBus.on('attach', onAttach);
@@ -532,8 +558,10 @@ export function FormEditor() {
         <ModularSection rootClass="fjs-render-injector-container" section="renderInjector">
           <InjectedRendersRoot />
         </ModularSection>
+        <CustomTypeBuilderFill />
       </SlotFillRoot>
       <PreviewModal />
+      <CustomTypeBuilderModal />
     </div>
   );
 }

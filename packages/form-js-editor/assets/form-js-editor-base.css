@@ -1010,3 +1010,391 @@
 .fjs-preview-modal-form-container .fjs-form {
   max-width: 100%;
 }
+/* Custom Types Styles */
+
+/* Custom Type Builder Button */
+.fjs-custom-type-builder-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--cds-button-primary, #0f62fe);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  transition: background-color 0.2s;
+}
+
+.fjs-custom-type-builder-button:hover {
+    background: var(--cds-button-primary-hover, #0353e9);
+  }
+
+.fjs-custom-type-builder-button:active {
+    background: var(--cds-button-primary-active, #002d9c);
+  }
+
+.fjs-custom-type-builder-button-icon {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1;
+  }
+
+.fjs-custom-type-builder-button-label {
+    white-space: nowrap;
+}
+
+/* Import/Export */
+.fjs-custom-types-import-export {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.fjs-button-small {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* Custom Type Modal */
+.fjs-custom-type-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fjs-custom-type-modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+  overflow: hidden;
+}
+
+.fjs-custom-type-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.fjs-custom-type-modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #161616;
+}
+
+.fjs-custom-type-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #525252;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fjs-custom-type-modal-close:hover {
+    color: #161616;
+}
+
+.fjs-custom-type-modal-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.fjs-custom-type-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.fjs-custom-type-modal-form {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+}
+
+.fjs-custom-type-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #f4f4f4;
+}
+
+.fjs-custom-type-modal-footer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Stepper */
+.fjs-custom-type-stepper {
+  display: flex;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f8f8;
+}
+
+.fjs-custom-type-stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  cursor: default;
+}
+
+.fjs-custom-type-stepper-step-clickable {
+    cursor: pointer;
+  }
+
+.fjs-custom-type-stepper-step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #525252;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+
+.fjs-custom-type-stepper-step-label {
+    font-size: 12px;
+    color: #525252;
+    text-align: center;
+  }
+
+.fjs-custom-type-stepper-step-active .fjs-custom-type-stepper-step-number {
+    background: var(--cds-button-primary, #0f62fe);
+    color: white;
+  }
+
+.fjs-custom-type-stepper-step-active .fjs-custom-type-stepper-step-label {
+    color: #161616;
+    font-weight: 500;
+  }
+
+.fjs-custom-type-stepper-step-completed .fjs-custom-type-stepper-step-number {
+    background: #24a148;
+    color: white;
+  }
+
+.fjs-custom-type-stepper-step-completed .fjs-custom-type-stepper-step-label {
+    color: #161616;
+}
+
+.fjs-custom-type-stepper-connector {
+  flex: 1;
+  height: 2px;
+  background: #e0e0e0;
+  margin: 0 8px -20px;
+}
+
+/* Step Content */
+.fjs-custom-type-step {
+  flex: 1;
+}
+
+.fjs-custom-type-step h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #161616;
+}
+
+.fjs-custom-type-field {
+  margin-bottom: 20px;
+}
+
+.fjs-custom-type-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #161616;
+  }
+
+.fjs-custom-type-field input[type='text'],
+.fjs-custom-type-field input[type='number'],
+.fjs-custom-type-field input[type='color'],
+.fjs-custom-type-field textarea,
+.fjs-custom-type-field select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #8d8d8d;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.fjs-custom-type-field input[type='text']:focus,
+.fjs-custom-type-field input[type='number']:focus,
+.fjs-custom-type-field input[type='color']:focus,
+.fjs-custom-type-field textarea:focus,
+.fjs-custom-type-field select:focus {
+      outline: none;
+      border-color: var(--cds-button-primary, #0f62fe);
+      box-shadow: 0 0 0 2px rgba(15, 98, 254, 0.1);
+    }
+
+.fjs-custom-type-field input[type='text'].fjs-error,
+.fjs-custom-type-field input[type='number'].fjs-error,
+.fjs-custom-type-field input[type='color'].fjs-error,
+.fjs-custom-type-field textarea.fjs-error,
+.fjs-custom-type-field select.fjs-error {
+      border-color: #da1e28;
+  }
+
+.fjs-custom-type-field textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+.fjs-custom-type-field input[type='checkbox'] {
+    margin-right: 8px;
+}
+
+.fjs-field-help {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #525252;
+}
+
+.fjs-error-message {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #da1e28;
+}
+
+.fjs-required {
+  color: #da1e28;
+}
+
+/* Options */
+.fjs-custom-type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fjs-custom-type-option-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.fjs-custom-type-option-row input {
+    flex: 1;
+  }
+
+.fjs-custom-type-option-row button {
+    padding: 6px 12px;
+    background: #da1e28;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.fjs-custom-type-option-row button:hover {
+      background: #b81921;
+}
+
+/* Preview */
+.fjs-custom-type-preview-container {
+  min-height: 200px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #fafafa;
+}
+
+.fjs-custom-type-preview-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #525252;
+  font-size: 14px;
+}
+
+/* Buttons */
+.fjs-button-primary {
+  padding: 8px 16px;
+  background: var(--cds-button-primary, #0f62fe);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  transition: background-color 0.2s;
+}
+
+.fjs-button-primary:hover {
+    background: var(--cds-button-primary-hover, #0353e9);
+  }
+
+.fjs-button-primary:active {
+    background: var(--cds-button-primary-active, #002d9c);
+}
+
+.fjs-button-secondary {
+  padding: 8px 16px;
+  background: white;
+  color: #161616;
+  border: 1px solid #8d8d8d;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  transition: all 0.2s;
+}
+
+.fjs-button-secondary:hover {
+    background: #f4f4f4;
+    border-color: #161616;
+  }
+
+.fjs-button-secondary:active {
+    background: #e0e0e0;
+}
+
+/* Custom Type Icon */
+.fjs-custom-type-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+}
+
